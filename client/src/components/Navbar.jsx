@@ -80,7 +80,7 @@ const Navbar = () => {
     <nav className={`navbar ${showNavbar ? 'navbar-visible' : 'navbar-hidden'}`}>
       <div className="navbar-container">
         <Link to="/home" className="navbar-logo">
-          Smiya
+          ChitChat
         </Link>
         
         <div className={`menu-toggle ${menuOpen ? 'active' : ''}`} onClick={toggleMenu}>
@@ -89,11 +89,7 @@ const Navbar = () => {
           <span></span>
         </div>
         
-        <div className={`nav-menu ${menuOpen ? 'active' : ''}`}>
-          <Link to="/birthday" className="nav-item birthday-nav-item">
-            🎂 Birthday Wishes
-          </Link>
-          
+        <div className={`nav-menu ${menuOpen ? 'active' : ''}`}>          
           {!user ? (
             // Not logged in - show login/register links
             <>

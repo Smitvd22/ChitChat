@@ -4,7 +4,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Friends from './pages/Friends';
 import Chat from './pages/Chat';
-import BirthdayWish from './pages/BirthdayWish';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { getCurrentUser } from './services/authService';
@@ -12,8 +11,6 @@ import { CallProvider } from './contexts/CallContext';
 import './App.css';
 import './styles/LoveTheme.css';
 import VideoCall from './pages/VideoCall';
-import LandingPage from './pages/LandingPage';
-import PreviousYear from './pages/PreviousYear'; // Import the PreviousYear component
 
 function App() {
   // Function to check if user is authenticated
@@ -57,9 +54,8 @@ function App() {
               path="/register"
               element={isAuthenticated() ? <Navigate to="/friends" /> : <Register />}
             />
-            <Route path="/birthday" element={<BirthdayWish />} />
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/previous-year" element={<PreviousYear />} /> {/* Add the PreviousYear route */}
+
+            <Route path="/" element={<Home />} />
 
             {/* Protected routes */}
             <Route

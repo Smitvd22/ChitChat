@@ -16,14 +16,6 @@ function Home() {
             Register
           </Link>
         </div>
-        
-        <div className="birthday-wish-banner">
-          <span className="birthday-icons">🎂 ❤️ 💗 🎁</span>
-          <h3>HAPPIEST BIRTHDAY AARU JAAN!!!</h3>
-          <Link to="/birthday" className="btn btn-birthday">
-            Proceed
-          </Link>
-        </div>
       </div>
       
       <div className="features-section">
