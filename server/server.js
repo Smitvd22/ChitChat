@@ -3,7 +3,7 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { pool } from './config/db.js';
 import { initializeSocketIO } from './sockets/index.js';
-import { initializeDatabase } from './config/schema.js';
+import { initializeDatabase } from './config/initDb.js';
 import authRoutes from './routes/authRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import userRoutes from './routes/userRoutes.js';
