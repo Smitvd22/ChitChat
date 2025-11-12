@@ -1,0 +1,223 @@
+.media-upload-container {
+  background-color: #f5f5f5;
+  border-radius: clamp(6px, 1.5vw, 8px);
+  padding: clamp(12px, 3vw, 15px);
+  margin-bottom: 15px;
+  animation: slideInUp 0.4s ease forwards;
+}
+
+.media-options {
+  display: flex;
+  flex-direction: column;
+}
+
+.media-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 2vw, 10px);
+  margin-bottom: clamp(12px, 3vw, 15px);
+}
+
+.media-buttons button {
+  padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 15px);
+  border: none;
+  border-radius: clamp(15px, 4vw, 20px);
+  background-color: #2196f3;
+  color: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-grow: 1;
+}
+
+.media-buttons button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+  background-color: #0d8aee;
+}
+
+.media-buttons button:active {
+  transform: translateY(0);
+}
+
+.media-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: fadeIn 0.4s ease;
+}
+
+.media-preview img,
+.media-preview video {
+  max-width: 100%;
+  max-height: clamp(200px, 40vh, 300px);
+  border-radius: clamp(6px, 1.5vw, 8px);
+  margin-bottom: 10px;
+  transition: transform 0.4s ease;
+}
+
+.media-preview audio {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: clamp(8px, 2vw, 10px);
+  margin-top: clamp(10px, 2.5vw, 15px);
+}
+
+.action-buttons button {
+  flex: 1;
+  padding: clamp(8px, 2vw, 10px);
+  border: none;
+  border-radius: clamp(4px, 1vw, 6px);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.action-buttons button:first-child {
+  background-color: #4caf50;
+  color: white;
+}
+
+.action-buttons button:last-child {
+  background-color: #f44336;
+  color: white;
+}
+
+.action-buttons button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.action-buttons button:active {
+  transform: translateY(0);
+}
+
+.media-capture {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: clamp(6px, 1.5vw, 8px);
+  overflow: hidden;
+}
+
+.media-capture video {
+  width: 100%;
+  max-height: clamp(250px, 50vh, 350px);
+  background-color: #000;
+  border-radius: clamp(6px, 1.5vw, 8px);
+  object-fit: cover;
+}
+
+.recording-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: clamp(4px, 1vw, 5px) clamp(8px, 2vw, 10px);
+  border-radius: clamp(15px, 4vw, 20px);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  animation: pulse 1.5s infinite;
+}
+
+.recording-dot {
+  width: clamp(10px, 2.5vw, 12px);
+  height: clamp(10px, 2.5vw, 12px);
+  background-color: #f44336;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.camera-feed.camera-loaded + .camera-loading {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.camera-feed {
+  transition: opacity 0.3s ease;
+  background-color: #000;
+}
+
+.capture-button {
+  animation: pulse 2s infinite;
+}
+
+.capture-instructions {
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 12px);
+  border-radius: clamp(15px, 4vw, 20px);
+  position: absolute;
+  bottom: clamp(60px, 15vw, 70px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+}
+
+.capture-button {
+  width: clamp(56px, 14vw, 64px);
+  height: clamp(56px, 14vw, 64px);
+  border-radius: 50%;
+  background-color: #fff;
+  border: 3px solid #ccc;
+  position: relative;
+  margin: 10px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.capture-button:hover {
+  transform: scale(1.1);
+  border-color: #ddd;
+}
+
+.capture-button:active {
+  background-color: #f44336;
+  border-color: #fff;
+  transform: scale(0.95);
+}
+
+.cancel-button {
+  background-color: transparent;
+  color: #fff;
+  border: none;
+}
+
+.audio-recording {
+  width: 100%;
+  min-height: clamp(150px, 30vh, 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0,0,0,0.05);
+  border-radius: clamp(6px, 1.5vw, 8px);
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .media-buttons {
+    flex-direction: column;
+  }
+  
+  .media-buttons button {
+    width: 100%;
+  }
+  
+  .capture-button {
+    width: 56px;
+    height: 56px;
+  }
+}

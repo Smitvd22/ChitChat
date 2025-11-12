@@ -1,0 +1,558 @@
+/* Update the chat container to start exactly below navbar */
+.chat-container {
+  position: fixed;
+  top: clamp(50px, 10vw, 70px); /* Match navbar height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: clamp(300px, 100%, 800px);
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: calc(100vh - clamp(50px, 10vw, 70px)); /* Full height minus navbar */
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid #e1e5e9;
+  background: white;
+}
+
+.chat-header h2 {
+  margin: 0;
+  flex-grow: 1;
+  text-align: center;
+  font-size: 1.2rem;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #2196f3;
+  padding: 5px 10px;
+}
+
+.chat-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.video-call-btn, .share-call-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.video-call-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.video-call-btn:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+}
+
+.share-call-btn {
+  background: #2196F3;
+  color: white;
+}
+
+.share-call-btn:hover {
+  background: #1976D2;
+  transform: translateY(-1px);
+}
+
+/* Ensure messages container has proper scroll containment */
+.messages-container {
+  flex-grow: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
+  max-height: calc(100vh - clamp(50px, 10vw, 70px) - 120px); /* Account for header and input area */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+}
+
+.loading-messages, .no-messages {
+  text-align: center;
+  color: #9e9e9e;
+  margin: auto;
+}
+
+.message {
+  max-width: 70%;
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  border-radius: 18px;
+  position: relative;
+}
+
+.message.sent {
+  align-self: flex-end;
+  background-color: var(--light-cyan);
+  border-bottom-right-radius: 4px;
+}
+
+.message.received {
+  align-self: flex-start;
+  background-color: var(--light-pink);
+  border-bottom-left-radius: 4px;
+}
+
+.message-content {
+  word-break: break-word;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #757575;
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* Message type styling */
+.message[data-message-type="video_call_link"] {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+/* Keep the message form at the bottom */
+.message-form {
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  padding: 15px;
+  background: white;
+  border-top: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.message-form input {
+  flex-grow: 1;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 10px 15px;
+  margin-right: 10px;
+  font-size: 1rem;
+}
+
+.message-form button {
+  background: var(--gradient-love);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.message-form button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.message-form button:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  text-align: center;
+  margin: 10px;
+  border-radius: 4px;
+}
+
+.spinner {
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border-left-color: #2196f3;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-more-messages {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.media-button:hover {
+  background-color: #0d8aee;
+}
+
+.connection-warning {
+  background-color: #fff3cd; 
+  color: #856404; 
+  padding: 8px 12px; 
+  border-radius: 4px;
+  margin: 8px 0;
+  text-align: center;
+}
+
+/* Reply context styling */
+.reply-context {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  border-left: 3px solid var(--primary-cyan);
+}
+
+.reply-indicator {
+  font-weight: bold;
+  color: #777;
+  margin-bottom: 2px;
+}
+
+.reply-content {
+  opacity: 0.8;
+}
+
+/* Message actions styling */
+.message-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: absolute;
+  right: 10px;
+  top: -20px;
+}
+
+.message.sent .message-actions {
+  right: 10px;
+}
+
+.message.received .message-actions {
+  left: 10px;
+}
+
+.message:hover .message-actions {
+  opacity: 1;
+}
+
+.action-button {
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.action-button:hover {
+  transform: scale(1.1);
+}
+
+/* Improved emoji picker container */
+.emoji-picker-container {
+  position: absolute;
+  z-index: 1000;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: white;
+}
+
+/* Position picker differently based on message type */
+.emoji-picker-sent {
+  right: 10px;
+  bottom: 100%;
+  margin-bottom: 10px;
+}
+
+.emoji-picker-received {
+  left: 10px;
+  bottom: 100%;
+  margin-bottom: 10px;
+}
+
+/* Close button for emoji picker */
+.emoji-picker-close {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1001;
+  font-size: 12px;
+}
+
+.emoji-picker-close:hover {
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+/* Make sure emoji picker doesn't overflow screen on mobile */
+@media (max-width: 480px) {
+  .emoji-picker-container {
+    position: fixed;
+    left: 50% !important;
+    right: auto !important;
+    bottom: 50% !important;
+    transform: translate(-50%, 50%);
+    margin-bottom: 0;
+    width: 90vw;
+    max-width: 320px;
+  }
+  
+  .emoji-picker-close {
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+  
+  /* Add overlay background for mobile */
+  .emoji-picker-container::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+  }
+}
+
+/* CSS for highlighted message when scrolling to it */
+@keyframes highlightAnimation {
+  0% { background-color: rgba(255, 230, 0, 0.2); }
+  50% { background-color: rgba(255, 230, 0, 0.5); }
+  100% { background-color: rgba(255, 230, 0, 0.2); }
+}
+
+.highlight-message {
+  animation: highlightAnimation 2s ease;
+  border: 2px solid rgba(255, 230, 0, 0.7) !important;
+  box-shadow: 0 0 8px rgba(255, 230, 0, 0.5) !important;
+}
+
+/* Improve reply context button appearance */
+.reply-context {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-left: 3px solid #3498db;
+  padding: 5px 8px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  transition: background-color 0.2s;
+}
+
+.reply-context:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile optimization for Chat page */
+
+/* Hide navbar when on chat page */
+body.chat-page-active .navbar {
+  display: none !important;
+}
+
+/* Use custom viewport height variable for better mobile support */
+:root {
+  --vh: 1vh;
+}
+
+/* Full screen chat container without navbar */
+.chat-container.chat-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100vh; /* Fallback */
+  height: calc(var(--vh, 1vh) * 100);
+  margin: 0;
+  max-width: 100%;
+  z-index: 1000;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Adjust message container to use flex for better space management */
+.messages-container {
+  flex: 1;
+  height: auto;
+  max-height: none;
+}
+
+/* Optimize form for mobile keyboard */
+.message-form {
+  position: sticky;
+  bottom: 0;
+  padding: 8px;
+  background-color: white;
+  z-index: 10;
+}
+
+/* Make sure input is visible above keyboard */
+.message-form input {
+  padding: 10px;
+  font-size: 16px; /* Prevents iOS zoom on focus */
+}
+
+/* Simplify connection warning */
+.connection-warning {
+  background-color: #fff3cd;
+  color: #856404;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin: 8px 0;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+  .chat-header {
+    padding: 8px 10px;
+    height: auto;
+  }
+  
+  .chat-header h2 {
+    font-size: 1.2rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .video-call-btn {
+    padding: 6px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .message {
+    max-width: 80%;
+    padding: 8px 12px;
+  }
+  
+  /* Ensure emoji picker doesn't overlap important content */
+  .emoji-picker-container {
+    position: fixed;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-height: 40vh;
+  }
+}
+
+/* Fix for iOS Safari viewport issues */
+@supports (-webkit-touch-callout: none) {
+  .chat-container.chat-fullscreen {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Updated styles for message reactions */
+.message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  margin: 0;
+  z-index: 5;
+}
+
+.message.sent .message-reactions {
+  position: absolute;
+  bottom: -12px;
+  right: 10px;
+}
+
+.message.received .message-reactions {
+  position: absolute;
+  bottom: -12px;
+  left: 10px;
+}
+
+.reaction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-right: 4px;
+  position: relative;
+  font-size: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.reaction:hover {
+  transform: scale(1.2);
+}
+
+/* Ensure message has correct positioning for absolute elements */
+.message {
+  position: relative;
+  margin-bottom: 18px; /* Extra space for reactions below */
+}

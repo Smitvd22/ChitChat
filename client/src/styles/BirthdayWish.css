@@ -1,0 +1,721 @@
+.birthday-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.birthday-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding: 30px 0;
+  position: relative;
+}
+
+.birthday-header h1 {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  background: linear-gradient(45deg, var(--primary-pink), var(--primary-cyan), var(--secondary-pink), var(--dark-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientAnimation 6s ease infinite;
+}
+
+.birthday-header p {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+.birthday-decoration {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.birthday-decoration span {
+  font-size: 2rem;
+  animation: bounce 2s infinite;
+}
+
+.birthday-decoration span:nth-child(1) { animation-delay: 0s; }
+.birthday-decoration span:nth-child(2) { animation-delay: 0.2s; }
+.birthday-decoration span:nth-child(3) { animation-delay: 0.4s; }
+.birthday-decoration span:nth-child(4) { animation-delay: 0.6s; }
+
+.birthday-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
+}
+
+/* Update the birthday card styles */
+
+.birthday-card {
+  background-color: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease, opacity 0.05s linear, transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform, opacity;
+  transform: scale(0.1);
+  opacity: 0;
+}
+
+/* Add styles for active cards */
+.birthday-card.card-active {
+  box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+  transform: scale(1) !important;
+  opacity: 1 !important;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+/* Left cards originate from right side (where dot is) */
+.left-item .birthday-card {
+  transform-origin: right center;
+}
+
+/* Right cards originate from left side (where dot is) */
+.right-item .birthday-card {
+  transform-origin: left center;
+}
+
+.card-theme-blue { border-top: 5px solid var(--primary-cyan); }
+.card-theme-purple { border-top: 5px solid var(--primary-pink); }
+.card-theme-green { border-top: 5px solid var(--secondary-cyan); }
+.card-theme-orange { border-top: 5px solid var(--secondary-pink); }
+.card-theme-pink { border-top: 5px solid var(--heart-color); }
+
+.card-image {
+  height: auto;
+  max-height: clamp(180px, 30vw, 250px);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.responsive-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.4s ease;
+}
+
+.card-active .responsive-image {
+  transform: scale(1);
+}
+
+.birthday-card:hover .card-image img {
+  transform: scale(1.08);
+}
+
+.card-content {
+  padding: 25px;
+  position: relative;
+}
+
+.confetti {
+  position: absolute;
+  top: -15px;
+  right: 15px;
+  display: flex;
+  gap: 5px;
+}
+
+.confetti span {
+  font-size: 1.2rem;
+  animation: spin 3s infinite;
+}
+
+.confetti span:nth-child(1) { animation-delay: 0s; }
+.confetti span:nth-child(2) { animation-delay: 0.5s; }
+.confetti span:nth-child(3) { animation-delay: 1s; }
+
+.card-content h3 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.card-message {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.card-sender {
+  font-style: italic;
+  text-align: right;
+  color: #888;
+}
+
+.share-wish {
+  background: var(--gradient-love);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-weight: 500;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.share-wish:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(255, 107, 139, 0.4);
+}
+
+.create-wish-section {
+  margin-top: 50px;
+  text-align: center;
+  padding: 40px;
+  background: linear-gradient(135deg, rgba(77, 208, 225, 0.1), rgba(255, 107, 139, 0.1));
+  border-radius: 15px;
+}
+
+.create-wish-section h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.create-wish-section p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.create-wish-btn {
+  background: var(--gradient-love);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.create-wish-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Timeline styling */
+.birthday-timeline {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  background: linear-gradient(180deg, var(--primary-pink), var(--primary-cyan), var(--secondary-pink), var(--secondary-cyan));
+  transform: translateX(-50%);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 80px;
+  width: 100%;
+  display: flex;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.left-item {
+  justify-content: flex-end;
+  padding-right: calc(50% + 30px);
+}
+
+.right-item {
+  justify-content: flex-start;
+  padding-left: calc(50% + 30px);
+}
+
+.timeline-dot {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background-color: var(--primary-pink);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  border: 4px solid white;
+  box-shadow: 0 0 0 4px rgba(255, 107, 139, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.timeline-item:hover .timeline-dot {
+  transform: translateX(-50%) scale(1.2);
+  box-shadow: 0 0 0 6px rgba(255, 107, 139, 0.3);
+}
+
+/* Update timeline date position styling */
+.timeline-date {
+  position: absolute;
+  top: 60px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #555;
+  transform: translateY(-50%);
+  background-color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 3;
+}
+
+/* When card is on left, date appears on right side of timeline */
+.left-item .timeline-date {
+  left: calc(50% + 40px);
+  right: auto;
+  text-align: left;
+}
+
+/* When card is on right, date appears on left side of timeline */
+.right-item .timeline-date {
+  right: calc(50% + 40px);
+  left: auto;
+  text-align: right;
+}
+
+.timeline-item .birthday-card {
+  transform: scale(0.1);
+  opacity: 0;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              opacity 0.8s ease, 
+              box-shadow 0.3s ease;
+}
+
+.timeline-item .card-visible {
+  transform: scale(1);
+  opacity: 1;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@media (max-width: 768px) {
+  .birthday-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .birthday-header h1 {
+    font-size: clamp(1.8rem, 6vw, 3rem);
+  }
+
+  .timeline-line {
+    left: 30px;
+  }
+  
+  .timeline-item {
+    padding-left: 80px !important;
+    padding-right: 10px !important;
+    justify-content: flex-start !important;
+  }
+  
+  .timeline-dot {
+    left: 30px;
+  }
+  
+  .timeline-date {
+    /* For all items on mobile, position date to the right of the line */
+    left: 80px !important;
+    right: auto !important;
+    text-align: left !important;
+    font-size: clamp(0.9rem, 3vw, 1.1rem);
+  }
+
+  .birthday-card {
+    transform-origin: left center !important;
+  }
+
+  .popup-btn {
+    padding: 8px 20px;
+    font-size: clamp(0.9rem, 3vw, 1rem);
+  }
+
+  .birthday-popup {
+    max-width: 85vw !important;
+    padding: 15px !important;
+  }
+  
+  .popup-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .card-image {
+    max-height: clamp(150px, 40vw, 200px);
+  }
+  
+  .card-content {
+    padding: clamp(10px, 3vw, 15px);
+  }
+}
+
+@media (max-width: 480px) {
+  .birthday-popup {
+    max-width: 85vw;
+    padding: 20px;
+  }
+  
+  .popup-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .popup-btn {
+    width: 100%;
+  }
+
+  .birthday-popup {
+    padding: 12px !important;
+    font-size: 0.9em !important;
+  }
+  
+  .popup-btn {
+    padding: 8px 16px;
+    font-size: 0.9em;
+  }
+  
+  .card-image {
+    max-height: clamp(120px, 35vw, 180px);
+  }
+  
+  /* Ensure timeline is more compact on mobile */
+  .timeline-item {
+    margin-bottom: 50px;
+  }
+}
+
+/* Add this class to body when popup is shown */
+.no-scroll {
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Add a blur overlay when popups are active */
+.birthday-container {
+  position: relative;
+}
+
+/* Create an overlay element in your JSX */
+.blur-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 999;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* Ensure the popup has higher z-index than the overlay */
+.birthday-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-left: 5px solid var(--primary-cyan);
+  padding: 25px 35px;
+  text-align: center;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.second-popup {
+  background: #fff8dc;
+  border-left: 5px solid var(--primary-pink);
+}
+
+.popup-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.popup-btn {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.yes-btn {
+  background: var(--gradient-love);
+  color: white;
+}
+
+.yes-btn:hover {
+  background: var(--primary-pink);
+  transform: scale(1.05);
+}
+
+.no-btn {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.no-btn:hover {
+  background-color: #e0e0e0;
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Styles for inactive popups */
+.inactive-popup {
+  opacity: 0.7;
+  transform-origin: center;
+  pointer-events: none; /* Prevent interaction with inactive popups */
+  box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+  transition: all 0.5s ease;
+}
+
+/* Heart trail styling */
+.heart-trail-point {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background-color: #ff69b4;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 998;
+  animation: trailFade 2s forwards;
+}
+
+@keyframes trailFade {
+  0% { opacity: 0.7; }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* Connection line animation */
+.connection-line {
+  stroke: var(--primary-pink);
+  animation: dashAnimation 1s linear forwards;
+  stroke-dashoffset: 1000;
+}
+
+@keyframes dashAnimation {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Replace the existing heart animation styles */
+
+.heart-fill {
+  fill: var(--primary-pink);
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: 
+    heartFadeIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+    heartPump 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s 2,
+    heartZoom 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 2.3s forwards;
+}
+
+@keyframes heartFadeIn {
+  from { opacity: 0; transform: scale(0); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes heartPump {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.25); }
+  30% { transform: scale(1); }
+  45% { transform: scale(1.35); }
+  60% { transform: scale(1); }
+  75% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes heartZoom {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.heart-completed {
+  stroke-dasharray: 5,5 !important;
+  animation: fadeOut 0.5s forwards 2s !important;
+}
+
+@keyframes fadeOut {
+  to { opacity: 0; }
+}
+
+/* Add this to ensure proper SVG rendering */
+.connection-lines path {
+  vector-effect: non-scaling-stroke;
+}
+
+/* Add this new style for the complete message */
+.popup-complete {
+  text-align: center;
+}
+
+.popup-complete p {
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  color: #ff4081;
+  font-weight: bold;
+}
+
+.continue-btn {
+  background-color: #ff4081;
+  color: white;
+}
+
+.continue-btn:hover {
+  background-color: #e91e63;
+  transform: scale(1.05);
+}
+
+/* Add shake animation for "No" click feedback */
+@keyframes shakeEffect {
+  0%, 100% { transform: translate(-50%, -50%); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-53%, -50%); }
+  20%, 40%, 60%, 80% { transform: translate(-47%, -50%); }
+}
+
+.shake-animation {
+  animation: shakeEffect 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Video Background Styles */
+.video-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.video-background video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translateX(-50%) translateY(-50%);
+  object-fit: cover;
+  opacity: 0.3; /* Adjust opacity to ensure content is visible */
+}
+
+.sound-toggle {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+              background 0.3s ease;
+}
+
+.sound-toggle:hover {
+  transform: scale(1.15);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.sound-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Add this to your existing CSS file */
+
+@keyframes float-up {
+  0% { transform: translateY(0) rotate(0); opacity: 0.9; }
+  100% { transform: translateY(-40px) rotate(10deg); opacity: 0; }
+}
+
+.heart-trail {
+  animation: float-up 1.2s ease-out forwards;
+  position: fixed;
+  pointer-events: none;
+  z-index: 999;
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.5);
+  will-change: transform, opacity;
+}
+
+/* Popup themes */
+.cyan-popup {
+  background: linear-gradient(to bottom right, #ffffff, #e6f9fc);
+  border-left: 5px solid var(--primary-cyan);
+  box-shadow: 0 10px 20px rgba(77, 208, 225, 0.2);
+}
+
+.pink-popup {
+  background: linear-gradient(to bottom right, #ffffff, #fff0f3);
+  border-left: 5px solid var(--primary-pink);
+  box-shadow: 0 10px 20px rgba(255, 107, 139, 0.2);
+}
