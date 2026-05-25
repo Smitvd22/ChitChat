@@ -32,6 +32,12 @@
           "cameraPermission": "ChitChat needs access to your camera to take photos for chats."
         }
       ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "ChitChat needs access to your microphone so you can send voice messages."
+        }
+      ],
       "expo-asset",
       "expo-font"
     ],

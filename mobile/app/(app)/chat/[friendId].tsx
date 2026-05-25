@@ -16,6 +16,10 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  Animated,
+  PanResponder,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -23,6 +27,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import api from '../../../services/api';
 import MediaDisplay from '../../../components/MediaDisplay';
 import MediaUpload from '../../../components/MediaUpload';
+import VoiceRecorder from '../../../components/VoiceRecorder';
 import { Message, Reaction, MediaUploadResult, Friend } from '../../../types';
 import { MESSAGES_PER_PAGE } from '../../../constants/config';
 import { Colors, Spacing, FontSize, BorderRadius } from '../../../constants/theme';
@@ -44,6 +49,11 @@ export default function ChatScreen() {
   const [showMediaUpload, setShowMediaUpload] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [sending, setSending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  
+  // Reaction Modal State
+  const [reactionModalVisible, setReactionModalVisible] = useState(false);
+  const [messageToReact, setMessageToReact] = useState<Message | null>(null);
 
   const hasJoinedRoom = useRef(false);
   const flatListRef = useRef<FlatList>(null);
@@ -243,8 +253,11 @@ export default function ChatScreen() {
         publicId: mediaData.publicId,
         format: mediaData.format,
         receiverId: friendId,
+        replyToId: replyingTo?.id || null,
       });
       setShowMediaUpload(false);
+      setIsRecording(false);
+      setReplyingTo(null);
     } catch (err) {
       console.error('Error sending media message:', err);
       Alert.alert('Error', 'Failed to send media');
@@ -273,22 +286,18 @@ export default function ChatScreen() {
     }
   };
 
-  // Quick react with common emojis
-  const quickReact = (messageId: number) => {
-    const emojis = ['2764-fe0f', '1f44d', '1f602', '1f622', '1f44f'];
-    const emojiLabels = ['❤️', '👍', '😂', '😢', '👏'];
+  // Quick react modal
+  const openReactionModal = (message: Message) => {
+    setMessageToReact(message);
+    setReactionModalVisible(true);
+  };
 
-    Alert.alert(
-      'React',
-      'Choose a reaction',
-      [
-        ...emojiLabels.map((label, i) => ({
-          text: label,
-          onPress: () => addReaction(messageId, emojis[i]),
-        })),
-        { text: 'Cancel', style: 'cancel' as const },
-      ]
-    );
+  const handleReact = (emoji: string) => {
+    if (messageToReact) {
+      addReaction(messageToReact.id, emoji);
+    }
+    setReactionModalVisible(false);
+    setMessageToReact(null);
   };
 
   // Render emoji from unified code - same logic as web
@@ -305,98 +314,142 @@ export default function ChatScreen() {
     }
   };
 
-  // Render a single message
-  const renderMessage = ({ item }: { item: Message }) => {
+  // MessageItem Component with Swipe-to-Reply
+  const MessageItem = React.memo(({ item, index }: { item: Message; index: number }) => {
     const isCurrentUser = item.senderId === user?.id;
     const replyToMessage = item.replyToId
       ? messages.find((m) => m.id === item.replyToId)
       : null;
 
-    return (
-      <View
-        style={[
-          styles.messageRow,
-          isCurrentUser ? styles.messageRowSent : styles.messageRowReceived,
-        ]}
-      >
-        <TouchableOpacity
-          style={[
-            styles.messageBubble,
-            isCurrentUser ? styles.sentBubble : styles.receivedBubble,
-          ]}
-          onLongPress={() => {
-            Alert.alert('Message Actions', undefined, [
-              { text: '↩️ Reply', onPress: () => setReplyingTo(item) },
-              { text: '😊 React', onPress: () => quickReact(item.id) },
-              { text: 'Cancel', style: 'cancel' },
-            ]);
-          }}
-          activeOpacity={0.8}
-        >
-          {/* Reply context */}
-          {item.replyToId && (
-            <View style={styles.replyContext}>
-              <Text style={styles.replyLabel}>↩️ Reply to:</Text>
-              <Text style={styles.replyContent} numberOfLines={1}>
-                {replyToMessage
-                  ? replyToMessage.content || '[Media]'
-                  : '[Original message not loaded]'}
-              </Text>
-            </View>
-          )}
+    const pan = useRef(new Animated.ValueXY()).current;
+    
+    const panResponder = useRef(
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (evt, gestureState) => {
+          return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+        },
+        onPanResponderMove: (evt, gestureState) => {
+          if (isCurrentUser && gestureState.dx < 0) {
+            pan.setValue({ x: Math.max(gestureState.dx, -60), y: 0 });
+          } else if (!isCurrentUser && gestureState.dx > 0) {
+            pan.setValue({ x: Math.min(gestureState.dx, 60), y: 0 });
+          }
+        },
+        onPanResponderRelease: (evt, gestureState) => {
+          if (isCurrentUser && gestureState.dx < -50) {
+            setReplyingTo(item);
+          } else if (!isCurrentUser && gestureState.dx > 50) {
+            setReplyingTo(item);
+          }
+          
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: true,
+            bounciness: 10,
+          }).start();
+        },
+        onPanResponderTerminate: () => {
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: true,
+          }).start();
+        },
+      })
+    ).current;
 
-          {/* Message text */}
-          {item.content ? (
+    return (
+      <View style={styles.messageRowWrapper}>
+        {/* Reply Icon Background (revealed when swiping) */}
+        <View style={[styles.swipeIconContainer, isCurrentUser ? styles.swipeIconRight : styles.swipeIconLeft]}>
+          <Ionicons name="arrow-undo" size={24} color={Colors.primary} />
+        </View>
+
+        <Animated.View
+          style={[
+            styles.messageRow,
+            isCurrentUser ? styles.messageRowSent : styles.messageRowReceived,
+            { transform: [{ translateX: pan.x }] }
+          ]}
+          {...panResponder.panHandlers}
+        >
+          <TouchableOpacity
+            style={[
+              styles.messageBubble,
+              isCurrentUser ? styles.sentBubble : styles.receivedBubble,
+            ]}
+            onLongPress={() => openReactionModal(item)}
+            delayLongPress={300}
+            activeOpacity={0.8}
+          >
+            {/* Reply context */}
+            {item.replyToId && (
+              <View style={styles.replyContext}>
+                <Text style={styles.replyLabel}>↩️ Reply to:</Text>
+                <Text style={styles.replyContent} numberOfLines={1}>
+                  {replyToMessage
+                    ? replyToMessage.content || '[Media]'
+                    : '[Original message not loaded]'}
+                </Text>
+              </View>
+            )}
+
+            {/* Message text */}
+            {item.content ? (
+              <Text
+                style={[
+                  styles.messageText,
+                  isCurrentUser ? styles.sentText : styles.receivedText,
+                ]}
+              >
+                {item.content}
+              </Text>
+            ) : null}
+
+            {/* Media content */}
+            {item.mediaUrl && (
+              <MediaDisplay
+                media={{
+                  url: item.mediaUrl,
+                  resourceType: item.mediaType || 'image',
+                  publicId: item.mediaPublicId || '',
+                  format: item.mediaFormat || '',
+                  messageId: item.id,
+                }}
+              />
+            )}
+
+            {/* Reactions */}
+            {item.reactions && item.reactions.length > 0 && (
+              <View style={styles.reactionsRow}>
+                {item.reactions.map((reaction: Reaction, index: number) => (
+                  <Text key={index} style={styles.reactionEmoji}>
+                    {renderEmoji(reaction.emoji)}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* Timestamp */}
             <Text
               style={[
-                styles.messageText,
-                isCurrentUser ? styles.sentText : styles.receivedText,
+                styles.timestamp,
+                isCurrentUser ? styles.timestampSent : styles.timestampReceived,
               ]}
             >
-              {item.content}
+              {new Date(item.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
             </Text>
-          ) : null}
-
-          {/* Media content */}
-          {item.mediaUrl && (
-            <MediaDisplay
-              media={{
-                url: item.mediaUrl,
-                resourceType: item.mediaType || 'image',
-                publicId: item.mediaPublicId || '',
-                format: item.mediaFormat || '',
-                messageId: item.id,
-              }}
-            />
-          )}
-
-          {/* Reactions */}
-          {item.reactions && item.reactions.length > 0 && (
-            <View style={styles.reactionsRow}>
-              {item.reactions.map((reaction: Reaction, index: number) => (
-                <Text key={index} style={styles.reactionEmoji}>
-                  {renderEmoji(reaction.emoji)}
-                </Text>
-              ))}
-            </View>
-          )}
-
-          {/* Timestamp */}
-          <Text
-            style={[
-              styles.timestamp,
-              isCurrentUser ? styles.timestampSent : styles.timestampReceived,
-            ]}
-          >
-            {new Date(item.createdAt).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     );
-  };
+  });
+
+  const renderMessage = ({ item, index }: { item: Message; index: number }) => (
+    <MessageItem item={item} index={index} />
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -430,6 +483,54 @@ export default function ChatScreen() {
           )}
         </View>
       </View>
+
+      {/* Reaction Modal */}
+      <Modal
+        visible={reactionModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setReactionModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setReactionModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={styles.reactionMenu}>
+                <Text style={styles.reactionTitle}>React</Text>
+                <View style={styles.emojiRow}>
+                  {[
+                    { code: '2764-fe0f', emoji: '❤️' },
+                    { code: '1f44d', emoji: '👍' },
+                    { code: '1f602', emoji: '😂' },
+                    { code: '1f622', emoji: '😢' },
+                    { code: '1f44f', emoji: '👏' },
+                    { code: '1f525', emoji: '🔥' },
+                  ].map((e) => (
+                    <TouchableOpacity
+                      key={e.code}
+                      style={styles.emojiBtn}
+                      onPress={() => handleReact(e.code)}
+                    >
+                      <Text style={styles.emojiText}>{e.emoji}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={styles.reactionActions}>
+                  <TouchableOpacity
+                    style={styles.reactionActionBtn}
+                    onPress={() => {
+                      if (messageToReact) setReplyingTo(messageToReact);
+                      setReactionModalVisible(false);
+                    }}
+                  >
+                    <Ionicons name="arrow-undo-outline" size={20} color={Colors.textPrimary} />
+                    <Text style={styles.reactionActionText}>Reply</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* Connection warning */}
       {!socketConnected && !loading && (
@@ -517,41 +618,56 @@ export default function ChatScreen() {
           <TouchableOpacity
             style={styles.mediaBtn}
             onPress={() => setShowMediaUpload(!showMediaUpload)}
+            disabled={isRecording}
           >
             <Ionicons
               name={showMediaUpload ? 'close' : 'add'}
               size={24}
-              color={Colors.primary}
+              color={isRecording ? Colors.textMuted : Colors.primary}
             />
           </TouchableOpacity>
 
-          <TextInput
-            style={styles.textInput}
-            value={messageInput}
-            onChangeText={setMessageInput}
-            placeholder={replyingTo ? 'Type your reply...' : 'Type a message...'}
-            placeholderTextColor={Colors.placeholder}
-            multiline
-            maxLength={2000}
-            returnKeyType="send"
-            onSubmitEditing={sendMessage}
-            blurOnSubmit={false}
-          />
+          {isRecording ? (
+            <VoiceRecorder
+              onUploadSuccess={handleMediaUploadSuccess}
+              onCancel={() => setIsRecording(false)}
+            />
+          ) : (
+            <TextInput
+              style={styles.textInput}
+              value={messageInput}
+              onChangeText={setMessageInput}
+              placeholder={replyingTo ? 'Type your reply...' : 'Type a message...'}
+              placeholderTextColor={Colors.placeholder}
+              multiline
+              maxLength={2000}
+              returnKeyType="send"
+              onSubmitEditing={sendMessage}
+              blurOnSubmit={false}
+            />
+          )}
 
-          <TouchableOpacity
-            style={[
-              styles.sendBtn,
-              (!messageInput.trim() || sending) && styles.sendBtnDisabled,
-            ]}
-            onPress={sendMessage}
-            disabled={!messageInput.trim() || sending}
-          >
-            {sending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Ionicons name="send" size={20} color="#fff" />
-            )}
-          </TouchableOpacity>
+          {!isRecording && (
+            <TouchableOpacity
+              style={[
+                styles.sendBtn,
+                !messageInput.trim() && !sending && styles.micBtn,
+                sending && styles.sendBtnDisabled,
+              ]}
+              onPress={messageInput.trim() ? sendMessage : () => setIsRecording(true)}
+              disabled={sending}
+            >
+              {sending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Ionicons 
+                  name={messageInput.trim() ? "send" : "mic"} 
+                  size={20} 
+                  color="#fff" 
+                />
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -655,8 +771,23 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: FontSize.md,
   },
-  messageRow: {
+  messageRowWrapper: {
     marginBottom: Spacing.sm,
+    justifyContent: 'center',
+  },
+  swipeIconContainer: {
+    position: 'absolute',
+    height: '100%',
+    justifyContent: 'center',
+  },
+  swipeIconLeft: {
+    left: 15,
+  },
+  swipeIconRight: {
+    right: 15,
+  },
+  messageRow: {
+    width: '100%',
   },
   messageRowSent: {
     alignItems: 'flex-end',
@@ -787,5 +918,65 @@ const styles = StyleSheet.create({
   },
   sendBtnDisabled: {
     backgroundColor: Colors.buttonDisabled,
+  },
+  micBtn: {
+    backgroundColor: Colors.success,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reactionMenu: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    width: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  reactionTitle: {
+    color: Colors.textPrimary,
+    fontSize: FontSize.md,
+    fontWeight: 'bold',
+    marginBottom: Spacing.md,
+    textAlign: 'center',
+  },
+  emojiRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.lg,
+  },
+  emojiBtn: {
+    backgroundColor: Colors.background,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emojiText: {
+    fontSize: 24,
+  },
+  reactionActions: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    paddingTop: Spacing.md,
+  },
+  reactionActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    gap: Spacing.sm,
+  },
+  reactionActionText: {
+    color: Colors.textPrimary,
+    fontSize: FontSize.md,
+    fontWeight: '500',
   },
 });

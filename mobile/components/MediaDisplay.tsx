@@ -14,6 +14,8 @@ import {
   Linking,
   Dimensions,
 } from 'react-native';
+import { Audio } from 'expo-av';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, FontSize } from '../constants/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -60,6 +62,68 @@ export default function MediaDisplay({ media }: MediaProps) {
 
   const openInBrowser = () => {
     Linking.openURL(media.url);
+  };
+
+  // Audio state
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  // Clean up sound on unmount
+  React.useEffect(() => {
+    return sound
+      ? () => {
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]);
+
+  const toggleAudioPlay = async () => {
+    try {
+      if (sound) {
+        if (isPlaying) {
+          await sound.pauseAsync();
+        } else {
+          // If finished, replay from start
+          if (position >= duration && duration > 0) {
+            await sound.replayAsync();
+          } else {
+            await sound.playAsync();
+          }
+        }
+      } else {
+        setIsLoading(true);
+        await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: media.url },
+          { shouldPlay: true },
+          (status) => {
+            if (status.isLoaded) {
+              setIsPlaying(status.isPlaying);
+              setPosition(status.positionMillis);
+              setDuration(status.durationMillis || 0);
+              if (status.didJustFinish) {
+                setIsPlaying(false);
+                setPosition(status.durationMillis || 0);
+              }
+            }
+          }
+        );
+        setSound(newSound);
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error('Failed to play audio', err);
+      setIsLoading(false);
+    }
+  };
+
+  const formatTime = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
   // Image display
@@ -109,13 +173,28 @@ export default function MediaDisplay({ media }: MediaProps) {
   }
 
   // Audio display
-  if (resourceType.includes('audio') || ['mp3', 'wav', 'ogg'].includes(resourceType)) {
+  if (resourceType.includes('audio') || ['mp3', 'wav', 'ogg', 'm4a', '3gp'].includes(resourceType)) {
+    const progressPercent = duration > 0 ? (position / duration) * 100 : 0;
+    
     return (
-      <View style={styles.container}>
-        <TouchableOpacity onPress={openInBrowser} style={styles.audioPlaceholder}>
-          <Text style={styles.audioIcon}>🎵</Text>
-          <Text style={styles.audioText}>Tap to play audio</Text>
+      <View style={[styles.container, styles.audioContainer]}>
+        <TouchableOpacity style={styles.playBtn} onPress={toggleAudioPlay} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <Ionicons name={isPlaying ? "pause" : "play"} size={24} color={Colors.primary} />
+          )}
         </TouchableOpacity>
+        
+        <View style={styles.audioWaveform}>
+          <View style={styles.audioProgressBar}>
+            <View style={[styles.audioProgressFill, { width: `${progressPercent}%` }]} />
+          </View>
+          <View style={styles.audioTimeRow}>
+            <Text style={styles.audioTime}>{formatTime(position)}</Text>
+            <Text style={styles.audioTime}>{formatTime(duration)}</Text>
+          </View>
+        </View>
       </View>
     );
   }
@@ -193,22 +272,46 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     marginTop: Spacing.xs,
   },
-  audioPlaceholder: {
-    width: MAX_MEDIA_WIDTH,
-    height: 60,
+  audioContainer: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.sm,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     gap: Spacing.sm,
+    width: MAX_MEDIA_WIDTH,
   },
-  audioIcon: {
-    fontSize: 20,
+  playBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  audioText: {
+  audioWaveform: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  audioProgressBar: {
+    height: 4,
+    backgroundColor: Colors.border,
+    borderRadius: 2,
+    width: '100%',
+    marginBottom: 4,
+  },
+  audioProgressFill: {
+    height: '100%',
+    backgroundColor: Colors.primary,
+    borderRadius: 2,
+  },
+  audioTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  audioTime: {
     color: Colors.textSecondary,
-    fontSize: FontSize.sm,
+    fontSize: 10,
   },
   unknownPlaceholder: {
     padding: Spacing.md,
