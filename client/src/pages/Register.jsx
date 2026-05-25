@@ -64,7 +64,7 @@ function Register() {
       // Show the full URL being used
       const apiUrl = process.env.REACT_APP_API_URL || 
         (process.env.NODE_ENV === 'production' 
-          ? 'https://smiya.onrender.com/api' 
+          ? 'https://chitchat-3l35.onrender.com' 
           : 'http://localhost:5000/api');
       setDebugInfo(`Sending request to: ${apiUrl}/auth/register`);
       

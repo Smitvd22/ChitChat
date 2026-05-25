@@ -5,8 +5,8 @@ function Home() {
   return (
     <div className="home-container">
       <div className="hero-section">
-        <h1>Welcome to Smiya</h1>
-        <p>An app just made for smiya to talk.</p>
+        <h1>Welcome to ChitChat</h1>
+        <p>An app just made to talk.</p>
         
         <div className="auth-buttons">
           <Link to="/login" className="btn btn-primary">

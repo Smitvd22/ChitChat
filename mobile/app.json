@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "ChitChat",
+    "slug": "chitchat",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "chitchat",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.chitchat.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "package": "com.chitchat.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ChitChat needs access to your photos to share images in chats.",
+          "cameraPermission": "ChitChat needs access to your camera to take photos for chats."
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "64f91a00-20d0-4d95-b506-8b3b8c731779"
+      }
+    }
+  }
+}

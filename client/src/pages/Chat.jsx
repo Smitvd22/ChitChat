@@ -39,7 +39,7 @@ function Chat() {
   
   const API_URL = process.env.REACT_APP_API_URL || 
     (process.env.NODE_ENV === 'production' 
-      ? 'https://smiya.onrender.com/api' 
+      ? 'https://chitchat-3l35.onrender.com' 
       : 'http://localhost:5000/api');
   const MESSAGES_PER_PAGE = 20;
   

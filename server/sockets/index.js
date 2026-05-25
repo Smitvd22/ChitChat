@@ -251,11 +251,18 @@ export const setupSocketIO = (io) => {
 export const initializeSocketIO = (server, app) => {
   const corsOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',')
-    : ['http://localhost:3000', 'https://smiya.onrender.com'];
+    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:8081', 'http://127.0.0.1:8081', 'https://chitchat-3l35.onrender.com'];
 
   const io = new Server(server, {
     cors: {
-      origin: corsOrigins,
+      origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        if (corsOrigins.includes(origin) || origin.match(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       methods: ['GET', 'POST'],
       credentials: true
     },

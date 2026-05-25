@@ -21,6 +21,12 @@ const server = createServer(app);
 // Middleware
 app.use(express.json());
 
+// Request logging middleware for debugging
+app.use((req, res, next) => {
+  console.log(`[DEBUG] ${req.method} ${req.url} - Origin: ${req.headers.origin || 'none'}`);
+  next();
+});
+
 // Enhanced CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
@@ -32,10 +38,12 @@ const corsOptions = {
       : [
           'http://localhost:3000',
           'http://127.0.0.1:3000',
-          'https://smiya.onrender.com'
+          'http://localhost:8081',
+          'http://127.0.0.1:8081',
+          'https://chitchat-3l35.onrender.com'
         ];
     
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.indexOf(origin) !== -1 || origin.match(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/)) {
       callback(null, true);
     } else {
       console.warn('CORS blocked origin:', origin);
@@ -75,7 +83,7 @@ app.get('/api/videoroom/create', (req, res) => {
 
 app.get('/', (req, res) => {
   res.send(`
-    <h1>Smiya API Server</h1>
+    <h1>ChitChat API Server</h1>
     <p>Environment: ${NODE_ENV}</p>
     <p>Timestamp: ${new Date().toISOString()}</p>
     <p><a href="/api/status">API Status (JSON)</a></p>
@@ -91,7 +99,7 @@ pool.query('SELECT NOW()', (err) => {
 // Start server
 server.listen(PORT, () => {
   const isProduction = NODE_ENV === 'production';
-  const baseUrl = isProduction ? 'https://smiya.onrender.com' : `http://localhost:${PORT}`;
+  const baseUrl = isProduction ? 'https://chitchat-3l35.onrender.com' : `http://localhost:${PORT}`;
   
   console.log(`🚀 Server running on port ${PORT} in ${NODE_ENV} mode`);
   console.log(`📡 API Status: ${baseUrl}/api/status`);

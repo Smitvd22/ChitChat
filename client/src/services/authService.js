@@ -7,11 +7,12 @@ let socket = null;
 // Fix URL and ensure correct endpoints with production fallback
 const API_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
-    ? 'https://smiya.onrender.com/api' 
+    ? 'https://chitchat-3l35.onrender.com' 
     : 'http://localhost:5000/api');
 
 export const register = async (userData) => {
   try {
+    console.log(`[authService] Calling POST ${API_URL}/auth/register`);
     const response = await axios.post(`${API_URL}/auth/register`, userData);
     console.log('Registration response:', response.data);
     
@@ -121,7 +122,7 @@ export const initializeSocket = () => {
   // Environment-aware socket URL
   const socketUrl = process.env.REACT_APP_SOCKET_URL || 
     (process.env.NODE_ENV === 'production' 
-      ? 'https://smiya.onrender.com' 
+      ? 'https://chitchat-3l35.onrender.com' 
       : 'http://localhost:5000'
     );
   
