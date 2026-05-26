@@ -1,4 +1,5 @@
 import { Server } from 'socket.io';
+import { setupGameSocket } from './gameSocket.js';
 
 /**
  * Sets up Socket.IO with all messaging and calling functionality
@@ -276,6 +277,9 @@ export const initializeSocketIO = (server, app) => {
 
   // Setup socket handlers
   setupSocketIO(io);
+
+  // Setup game socket handlers (isolated from chat/video)
+  setupGameSocket(io);
 
   return io;
 };

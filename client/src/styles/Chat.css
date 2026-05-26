@@ -66,6 +66,16 @@
   transform: translateY(-1px);
 }
 
+.games-btn {
+  background: #7c4dff;
+  color: white;
+}
+
+.games-btn:hover {
+  background: #651fff;
+  transform: translateY(-1px);
+}
+
 .share-call-btn {
   background: #2196F3;
   color: white;

@@ -11,6 +11,7 @@ import { CallProvider } from './contexts/CallContext';
 import './App.css';
 import './styles/LoveTheme.css';
 import VideoCall from './pages/VideoCall';
+import { GamesLobby, Connect4Page } from './features/games';
 
 function App() {
   // Function to check if user is authenticated
@@ -82,6 +83,23 @@ function App() {
               element={
                 <ProtectedRoute>
                   <VideoCall />
+                </ProtectedRoute>
+              }
+            />
+            {/* Game routes */}
+            <Route
+              path="/games/:friendId"
+              element={
+                <ProtectedRoute>
+                  <GamesLobby />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/games/:friendId/connect4"
+              element={
+                <ProtectedRoute>
+                  <Connect4Page />
                 </ProtectedRoute>
               }
             />

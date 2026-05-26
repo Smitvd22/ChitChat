@@ -827,6 +827,12 @@ function Chat() {
         
         <div className="chat-actions">
           <button 
+            onClick={() => navigate(`/games/${friendId}`)} 
+            className="games-btn"
+          >
+            🎮 Games
+          </button>
+          <button 
             onClick={startVideoCall} 
             className="video-call-btn"
             disabled={!socketConnected}
