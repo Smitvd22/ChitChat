@@ -199,7 +199,7 @@ const VideoCall = () => {
     }
     
     // Rest of your development config...
-    const host = process.env.REACT_APP_PEERJS_HOST || 'localhost';
+    const host = process.env.REACT_APP_PEERJS_HOST || window.location.hostname;
     const port = parseInt(process.env.REACT_APP_PEERJS_PORT) || 9000;
     const path = process.env.REACT_APP_PEERJS_PATH || '/peerjs';
     const secure = process.env.REACT_APP_PEERJS_SECURE === 'true' || false;
@@ -749,6 +749,11 @@ const VideoCall = () => {
 
   // Enhanced toggle video function
   const toggleVideo = () => {
+    if (!navigator.mediaDevices) {
+      alert('Camera access is not available. Please ensure you are using a secure connection (HTTPS) or localhost.');
+      return;
+    }
+
     if (!hasVideoPermission) {
       // This part is fine - handles initial permission request
       navigator.mediaDevices.getUserMedia({ video: true })
@@ -795,6 +800,7 @@ const VideoCall = () => {
       
       // If no video tracks or they're disabled
       if (videoTracks.length === 0 || !videoTracks[0].enabled) {
+        if (!navigator.mediaDevices) return;
         // Request a new video track
         navigator.mediaDevices.getUserMedia({ video: true })
           .then(stream => {
@@ -894,6 +900,11 @@ const VideoCall = () => {
   // };
 
   const toggleAudio = () => {
+    if (!navigator.mediaDevices) {
+      alert('Microphone access is not available. Please ensure you are using a secure connection (HTTPS) or localhost.');
+      return;
+    }
+
     if (!hasAudioPermission) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {

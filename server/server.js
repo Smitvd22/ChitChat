@@ -43,7 +43,10 @@ const corsOptions = {
           'https://chitchat-3l35.onrender.com'
         ];
     
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.match(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/)) {
+    if (allowedOrigins.indexOf(origin) !== -1 || 
+        origin.match(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+):\d+$/) ||
+        origin.match(/^https:\/\/.*\.loca\.lt$/) ||
+        origin.match(/^https:\/\/.*\.pinggy-free\.link$/)) {
       callback(null, true);
     } else {
       console.warn('CORS blocked origin:', origin);

@@ -5,10 +5,15 @@ import io from 'socket.io-client';
 let socket = null;
 
 // Fix URL and ensure correct endpoints with production fallback
-const API_URL = process.env.REACT_APP_API_URL || 
+let API_URL = process.env.REACT_APP_API_URL || 
   (process.env.NODE_ENV === 'production' 
     ? 'https://chitchat-3l35.onrender.com' 
-    : 'http://localhost:5000/api');
+    : `http://${window.location.hostname}:5000/api`);
+
+// Dynamically replace localhost with actual IP for Mobile WebView compatibility
+if (API_URL && API_URL.includes('localhost')) {
+  API_URL = API_URL.replace('localhost', window.location.hostname);
+}
 
 export const register = async (userData) => {
   try {
@@ -103,12 +108,15 @@ export const getCurrentUser = () => {
 
 // Update the initializeSocket function to include a debug parameter
 export const initializeSocket = () => {
-  if (socket && socket.connected) {
-    return socket;
+  if (socket) {
+    // If it's already connected or currently connecting, just return it
+    if (socket.connected || socket.active) {
+      return socket;
+    }
   }
   
-  // Clean up any existing disconnected socket
-  if (socket && !socket.connected) {
+  // Clean up completely disconnected socket
+  if (socket) {
     console.log('Cleaning up disconnected socket');
     socket.disconnect();
     socket = null;
@@ -119,12 +127,16 @@ export const initializeSocket = () => {
   
   console.log('Creating new socket connection');
   
-  // Environment-aware socket URL
-  const socketUrl = process.env.REACT_APP_SOCKET_URL || 
+  let socketUrl = process.env.REACT_APP_SOCKET_URL || 
     (process.env.NODE_ENV === 'production' 
       ? 'https://chitchat-3l35.onrender.com' 
-      : 'http://localhost:5000'
+      : `http://${window.location.hostname}:5000`
     );
+
+  // Dynamically replace localhost with actual IP for Mobile WebView compatibility
+  if (socketUrl && socketUrl.includes('localhost')) {
+    socketUrl = socketUrl.replace('localhost', window.location.hostname);
+  }
   
   console.log('Connecting to socket URL:', socketUrl);
   
@@ -134,7 +146,7 @@ export const initializeSocket = () => {
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
     timeout: 20000,
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'], // Use polling first to prevent immediate websocket error in Android WebView
     auth: { userId: user.id },
     forceNew: false,
     upgrade: true

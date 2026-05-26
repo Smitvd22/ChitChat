@@ -31,6 +31,11 @@ const isDev = __DEV__;
 export const API_URL = isDev ? DEV_API_URL : PROD_API_URL;
 export const SOCKET_URL = isDev ? DEV_SOCKET_URL : PROD_SOCKET_URL;
 
+// The URL where your React frontend is hosted
+const PROD_WEB_URL = 'https://chit-chat-nine-gamma.vercel.app'; 
+const DEV_WEB_URL = `http://${DEV_HOST.replace('http://', '').split(':')[0]}:3000`;
+export const WEB_APP_URL = isDev ? DEV_WEB_URL : PROD_WEB_URL;
+
 // Cloudinary config - same as web app, safe for client-side
 export const CLOUDINARY_CLOUD_NAME = 'drrcslcvk';
 export const CLOUDINARY_UPLOAD_PRESET = 'chitchat';

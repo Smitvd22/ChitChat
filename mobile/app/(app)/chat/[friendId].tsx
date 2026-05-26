@@ -286,6 +286,27 @@ export default function ChatScreen() {
     }
   };
 
+  // Video call initiation
+  const handleVideoCall = () => {
+    if (!socket || !friendInfo || !user) return;
+    
+    const callId = `call_${Date.now()}`;
+    
+    // Emit invitation to server
+    socket.emit('video-call-invitation', {
+      callId,
+      fromUserId: user.id,
+      toUserId: friendInfo.id,
+      fromUsername: user.username,
+    });
+    
+    // Navigate to Video Call screen
+    router.push({
+      pathname: '/(app)/videocall/[callId]',
+      params: { callId, isInitiator: 'true', receiverId: friendInfo.id }
+    });
+  };
+
   // Quick react modal
   const openReactionModal = (message: Message) => {
     setMessageToReact(message);
@@ -478,6 +499,9 @@ export default function ChatScreen() {
           </Text>
         </View>
         <View style={styles.headerRight}>
+          <TouchableOpacity onPress={handleVideoCall} style={{ marginRight: Spacing.sm, padding: Spacing.xs }}>
+            <Ionicons name="videocam" size={24} color={Colors.primary} />
+          </TouchableOpacity>
           {!socketConnected && (
             <Ionicons name="cloud-offline" size={20} color={Colors.warning} />
           )}

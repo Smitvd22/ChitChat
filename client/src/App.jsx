@@ -19,6 +19,9 @@ function App() {
     return !!user && !!user.token;
   };
 
+  // Check if loaded inside Mobile App WebView
+  const isWebView = new URLSearchParams(window.location.search).get('webview') === 'true';
+
   return (
     <Router
       future={{
@@ -42,7 +45,7 @@ function App() {
               />
             ))}
           </div>
-          <Navbar />
+          {!isWebView && <Navbar />}
           <Routes>
             {/* Public routes */}
             <Route path="/home" element={<Home />} />

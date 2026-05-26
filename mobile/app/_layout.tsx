@@ -7,6 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 import { Colors } from '../constants/theme';
+import IncomingCallModal from '../components/IncomingCallModal';
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -48,6 +49,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(app)" options={{ headerShown: false }} />
       </Stack>
+      <IncomingCallModal />
     </>
   );
 }

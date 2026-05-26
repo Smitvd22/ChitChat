@@ -35,7 +35,13 @@
       [
         "expo-av",
         {
-          "microphonePermission": "ChitChat needs access to your microphone so you can send voice messages."
+          "microphonePermission": "ChitChat needs access to your microphone so you can send voice messages and make audio calls."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ChitChat needs access to your camera so you can make video calls."
         }
       ],
       "expo-asset",
