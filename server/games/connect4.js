@@ -48,11 +48,13 @@ function findAvailableRow(board, col) {
 /**
  * Validates and applies a move
  * @param {object} state - Current game state
- * @param {number} col - Column to drop disc (0-6)
+ * @param {object} payload - Move payload
  * @param {string} playerId - ID of the player making the move
  * @returns {{ valid: boolean, state?: object, error?: string }}
  */
-export function makeMove(state, col, playerId) {
+export function makeMove(state, payload, playerId) {
+  const col = payload.column;
+
   // Validate game is active
   if (state.status !== 'playing') {
     return { valid: false, error: 'Game is not in progress' };

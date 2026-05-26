@@ -7,6 +7,9 @@
  */
 
 import { createGame, makeMove, resetForRematch } from '../games/connect4.js';
+import * as tictactoe from '../games/tictactoe.js';
+import * as dotsboxes from '../games/dotsboxes.js';
+import * as memorycards from '../games/memorycards.js';
 
 // In-memory store of active game sessions
 // Key: `${roomId}:${gameId}`, Value: game state
@@ -15,6 +18,9 @@ const gameSessions = new Map();
 // Registry of supported games and their logic modules
 const gameRegistry = {
   connect4: { createGame, makeMove, resetForRematch },
+  tictactoe: tictactoe,
+  'dots-boxes': dotsboxes,
+  'memory-cards': memorycards,
 };
 
 /**
@@ -123,7 +129,7 @@ export function setupGameSocket(io) {
         }
 
         // Apply the move using game-specific logic
-        const result = gameMod.makeMove(session, payload.column, playerId);
+        const result = gameMod.makeMove(session, payload, playerId);
 
         if (!result.valid) {
           socket.emit('game:error', { error: result.error });

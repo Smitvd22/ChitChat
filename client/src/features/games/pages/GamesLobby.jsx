@@ -16,7 +16,7 @@ const GAMES = [
     name: 'Tic Tac Toe',
     emoji: '❌',
     description: 'Classic X and O battle.',
-    available: false,
+    available: true,
   },
   {
     id: 'reaction-tap',
@@ -30,14 +30,14 @@ const GAMES = [
     name: 'Dots & Boxes',
     emoji: '🔲',
     description: 'Connect dots to claim boxes.',
-    available: false,
+    available: true,
   },
   {
     id: 'memory-cards',
     name: 'Memory Cards',
     emoji: '🃏',
-    description: 'Flip and match pairs to win.',
-    available: false,
+    description: 'Find the matching pairs.',
+    available: true,
   },
   {
     id: 'ping-pong',

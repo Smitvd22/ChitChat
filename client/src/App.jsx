@@ -11,7 +11,7 @@ import { CallProvider } from './contexts/CallContext';
 import './App.css';
 import './styles/LoveTheme.css';
 import VideoCall from './pages/VideoCall';
-import { GamesLobby, Connect4Page } from './features/games';
+import { GamesLobby, Connect4Page, TicTacToePage, DotsBoxesPage, MemoryCardsPage } from './features/games';
 
 function App() {
   // Function to check if user is authenticated
@@ -100,6 +100,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Connect4Page />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/games/:friendId/tictactoe"
+              element={
+                <ProtectedRoute>
+                  <TicTacToePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/games/:friendId/dots-boxes"
+              element={
+                <ProtectedRoute>
+                  <DotsBoxesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/games/:friendId/memory-cards"
+              element={
+                <ProtectedRoute>
+                  <MemoryCardsPage />
                 </ProtectedRoute>
               }
             />
