@@ -70,7 +70,7 @@ const Navbar = () => {
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/home" className="navbar-logo">
-          <img src="/ChitChatLogoSmall.png" alt="ChitChat" className="navbar-logo-img" />
+          <img src={process.env.PUBLIC_URL + '/ChitChatLogoSmall.png'} alt="ChitChat" className="navbar-logo-img" />
           <span className="navbar-logo-text">ChitChat</span>
         </Link>
 

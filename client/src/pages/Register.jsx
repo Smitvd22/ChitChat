@@ -89,7 +89,7 @@ function Register() {
       <div className="auth-card">
         {/* Brand */}
         <div className="auth-brand">
-          <img src="/ChitChatLogo.png" alt="ChitChat" className="auth-logo-img" />
+          <img src={process.env.PUBLIC_URL + '/ChitChatLogo.png'} alt="ChitChat" className="auth-logo-img" />
         </div>
 
         <h2>Create Account</h2>
