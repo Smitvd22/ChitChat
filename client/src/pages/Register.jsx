@@ -25,25 +25,19 @@ function Register() {
     e.preventDefault();
     setError('');
 
-    // Validate form
     if (!formData.username || !formData.email || !formData.mobile || !formData.password) {
       setError('All fields are required');
       return;
     }
-
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
-    // Simple email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email address');
       return;
     }
-
-    // Simple phone validation
     const phoneRegex = /^\d{10,12}$/;
     if (!phoneRegex.test(formData.mobile)) {
       setError('Please enter a valid mobile number (10-12 digits)');
@@ -53,50 +47,38 @@ function Register() {
     try {
       setLoading(true);
       setDebugInfo('Sending registration request...');
-      
       const userData = {
         username: formData.username,
         email: formData.email,
         mobile: formData.mobile,
         password: formData.password
       };
-      
-      // Show the full URL being used
-      const apiUrl = process.env.REACT_APP_API_URL || 
-        (process.env.NODE_ENV === 'production' 
-          ? 'https://chitchat-3l35.onrender.com' 
+      const apiUrl = process.env.REACT_APP_API_URL ||
+        (process.env.NODE_ENV === 'production'
+          ? 'https://chitchat-3l35.onrender.com'
           : 'http://localhost:5000/api');
       setDebugInfo(`Sending request to: ${apiUrl}/auth/register`);
-      
       console.log('Registration data:', userData);
       const response = await register(userData);
       console.log('Registration response:', response);
-      
       setDebugInfo('Registration successful');
       setLoading(false);
       navigate('/friends?registered=true');
     } catch (err) {
       setLoading(false);
       console.error('Registration error details:', err);
-      
-      // More detailed error information
       let errorMsg = 'Unknown error occurred';
       let statusCode = 'unknown status';
-      
       if (err.response) {
-        // Server responded with error
         statusCode = err.response.status;
         errorMsg = err.response.data?.error || err.response.statusText;
         console.log('Error response:', err.response);
       } else if (err.request) {
-        // Request made but no response received
         errorMsg = 'No response from server - check if server is running';
         console.log('Error request:', err.request);
       } else {
-        // Error in request setup
         errorMsg = err.message;
       }
-      
       setError(errorMsg);
       setDebugInfo(`Error: ${errorMsg} (${statusCode})`);
     }
@@ -105,14 +87,21 @@ function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2>Create an Account</h2>
-        {error && <div className="auth-error">{error}</div>}
+        {/* Brand */}
+        <div className="auth-brand">
+          <img src="/ChitChatLogo.png" alt="ChitChat" className="auth-logo-img" />
+        </div>
+
+        <h2>Create Account</h2>
+        <p className="auth-subtitle">Join and start connecting with your loved ones 💕</p>
+
+        {error && <div className="auth-error">⚠️ {error}</div>}
         {process.env.NODE_ENV === 'development' && debugInfo && (
-          <div className="debug-info" style={{color: 'gray', fontSize: '0.8rem', margin: '10px 0'}}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem', margin: '8px 0', padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
             Debug: {debugInfo}
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="username">Username</label>
@@ -122,10 +111,11 @@ function Register() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="Create a username"
+              placeholder="Choose a username"
+              autoComplete="username"
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="email">Email Address</label>
             <input
@@ -135,9 +125,10 @@ function Register() {
               value={formData.email}
               onChange={handleChange}
               placeholder="Enter your email"
+              autoComplete="email"
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="mobile">Mobile Number</label>
             <input
@@ -146,10 +137,11 @@ function Register() {
               name="mobile"
               value={formData.mobile}
               onChange={handleChange}
-              placeholder="Enter your mobile number"
+              placeholder="10-12 digit mobile number"
+              autoComplete="tel"
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
@@ -158,10 +150,11 @@ function Register() {
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Create a password"
+              placeholder="Create a strong password"
+              autoComplete="new-password"
             />
           </div>
-          
+
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
             <input
@@ -171,20 +164,17 @@ function Register() {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirm your password"
+              autoComplete="new-password"
             />
           </div>
-          
-          <button 
-            type="submit" 
-            className="auth-button" 
-            disabled={loading}
-          >
-            {loading ? 'Creating account...' : 'Register'}
+
+          <button type="submit" className="auth-button" disabled={loading}>
+            {loading ? '✨ Creating Account...' : '🚀 Create Account'}
           </button>
         </form>
-        
+
         <div className="auth-footer">
-          Already have an account? <Link to="/login">Log In</Link>
+          Already have an account? <Link to="/login">Sign in →</Link>
         </div>
       </div>
     </div>

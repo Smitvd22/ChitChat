@@ -1237,48 +1237,34 @@ const VideoCall = () => {
     return (
       <div className="video-call-container">
         <div className="loading">
-          <div className="spinner"></div>
+          <div className="spinner" />
           <p>
-            {connectionStatus === 'connecting' && 'Connecting to server...'}
-            {connectionStatus === 'setting-up' && 'Setting up video call...'}
-            {connectionStatus === 'waiting' && 'Waiting for other user...'}
-            {connectionStatus === 'calling' && 'Connecting to peer...'}
-            {connectionStatus === 'initializing' && 'Initializing...'}
+            {connectionStatus === 'connecting' && '📶 Connecting to server...'}
+            {connectionStatus === 'setting-up' && '🔧 Setting up video call...'}
+            {connectionStatus === 'waiting' && '⏳ Waiting for other user...'}
+            {connectionStatus === 'calling' && '📞 Connecting to peer...'}
+            {connectionStatus === 'initializing' && '✨ Initializing...'}
+            {!connectionStatus && 'Loading...'}
           </p>
-          <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#ccc' }}>
-            <p>This may take a few moments. Please wait...</p>
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
-              <button onClick={handleRetry} style={{
-                padding: '0.5rem 1rem',
-                background: '#4CAF50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}>
-                Retry Connection
-              </button>
-              <button onClick={() => window.location.reload()} style={{
-                padding: '0.5rem 1rem',
-                background: '#666',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}>
-                Refresh Page
-              </button>
-              <button onClick={() => navigate(-1)} style={{
-                padding: '0.5rem 1rem',
-                background: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}>
-                Go Back
-              </button>
-            </div>
+          <div style={{ marginTop: '8px', display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              onClick={handleRetry}
+              className="control-btn active"
+            >
+              🔄 Retry
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="control-btn disabled"
+            >
+              🔃 Refresh
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="control-btn end-call"
+            >
+              ← Go Back
+            </button>
           </div>
         </div>
       </div>
@@ -1290,11 +1276,16 @@ const VideoCall = () => {
     return (
       <div className="video-call-container">
         <div className="error-message">
+          <span style={{ fontSize: '2.5rem' }}>📵</span>
           <h3>Connection Error</h3>
           <p>{error}</p>
-          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-            <button onClick={handleRetry}>Try Again</button>
-            <button onClick={() => navigate(-1)}>Go Back</button>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button onClick={handleRetry} className="control-btn active" style={{ borderRadius: '999px', padding: '12px 24px' }}>
+              🔄 Try Again
+            </button>
+            <button onClick={() => navigate(-1)} className="control-btn end-call" style={{ borderRadius: '999px', padding: '12px 24px' }}>
+              ← Go Back
+            </button>
           </div>
         </div>
       </div>
@@ -1305,24 +1296,28 @@ const VideoCall = () => {
   return (
     <div className="video-call-container">
       <div className="video-call-header">
-        <h2>Video Call</h2>
-        <div className="connection-status">
-          Status: {connectionStatus}
+        <h2>📹 Video Call</h2>
+        <div className={`connection-status ${connectionStatus}`}>
+          {connectionStatus === 'connected' && '• Connected'}
+          {connectionStatus === 'waiting' && '⏳ Waiting...'}
+          {connectionStatus === 'calling' && '📞 Calling...'}
+          {connectionStatus === 'connecting' && '📶 Connecting...'}
+          {connectionStatus === 'setting-up' && '✨ Setting up...'}
+          {connectionStatus === 'disconnected' && '✗ Disconnected'}
+          {connectionStatus === 'error' && '⚠️ Error'}
+          {connectionStatus === 'initializing' && '⌛ Initializing...'}
         </div>
         {(!hasVideoPermission || !hasAudioPermission) && (
-          <div className="media-warning" style={{
-            background: '#ff9800',
-            color: '#000',
-            padding: '0.5rem',
-            borderRadius: '4px',
-            fontSize: '0.875rem',
-            margin: '0.5rem 0'
+          <div className="connection-status" style={{
+            background: 'rgba(255,204,102,0.12)',
+            color: '#FFCC66',
+            border: '1px solid rgba(255,204,102,0.3)'
           }}>
             ⚠️ {!hasVideoPermission && !hasAudioPermission
-              ? 'Camera and microphone access denied'
+              ? 'No camera or mic'
               : !hasVideoPermission
-                ? 'Camera access denied'
-                : 'Microphone access denied'}
+                ? 'No camera'
+                : 'No mic'}
           </div>
         )}
       </div>
@@ -1429,22 +1424,30 @@ const VideoCall = () => {
         </button>
       </div>
 
-      {/* Participants list - NEW SECTION */}
-      <div className="participants-list">
-        <h3>Participants ({participants.length})</h3>
-        <ul>
-          {participants.map((participantId, index) => (
-            <li key={index}>{participantId === myPeerId ? 'You' : participantId}</li>
-          ))}
-        </ul>
+      {/* Participants list - hidden in premium view */}
+      <div style={{ display: 'none' }}>
+        {participants.map((participantId, index) => (
+          <span key={index}>{participantId}</span>
+        ))}
       </div>
 
-      {/* Debug info - shows myPeerId in development mode */}
-      <div className="debug-info">
-        {process.env.NODE_ENV === 'development' && (
-          <div className="peer-id">My Peer ID: {myPeerId}</div>
-        )}
-      </div>
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && myPeerId && (
+        <div style={{
+          position: 'fixed',
+          bottom: '80px',
+          right: '8px',
+          background: 'rgba(0,0,0,0.6)',
+          color: 'rgba(255,255,255,0.5)',
+          fontSize: '0.65rem',
+          padding: '4px 8px',
+          borderRadius: '6px',
+          zIndex: 10000,
+          pointerEvents: 'none'
+        }}>
+          ID: {myPeerId.substring(0, 8)}...
+        </div>
+      )}
     </div>
   );
 };

@@ -558,52 +558,61 @@ function Chat() {
       : null;
     
     return (
-      <div 
-        key={message.id} 
+      <div
+        key={message.id}
         className={`message ${isCurrentUser ? 'sent' : 'received'}`}
-        data-message-id={message.id} // Add data attribute for querying
+        data-message-id={message.id}
       >
-        {/* Show reply context if this message is a reply */}
-        {message.replyToId && (
-          <div 
-            className="reply-context" 
-            onClick={() => scrollToMessage(message.replyToId)}
-            style={{ cursor: 'pointer' }}
-          >
-            <div className="reply-indicator">↩️ Reply to:</div>
-            <div className="reply-content">
-              {replyToMessage 
-                ? (replyToMessage.content 
-                    ? replyToMessage.content.substring(0, 50) + (replyToMessage.content.length > 50 ? '...' : '')
-                    : replyToMessage.mediaUrl 
-                      ? '[Media]' 
-                      : '[Message]')
-                : '[Original message not loaded]'}
+        <div className="message-bubble">
+          {/* Show reply context if this message is a reply */}
+          {message.replyToId && (
+            <div
+              className="reply-context"
+              onClick={() => scrollToMessage(message.replyToId)}
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="reply-indicator">↩️ Reply to:</div>
+              <div className="reply-content">
+                {replyToMessage
+                  ? (replyToMessage.content
+                      ? replyToMessage.content.substring(0, 50) + (replyToMessage.content.length > 50 ? '...' : '')
+                      : replyToMessage.mediaUrl
+                        ? '[Media]'
+                        : '[Message]')
+                  : '[Original message not loaded]'}
+              </div>
             </div>
+          )}
+
+          {/* Show message content if any */}
+          {message.content && (
+            <div className="message-content">{message.content}</div>
+          )}
+
+          {/* Show media content */}
+          {(message.mediaUrl || (message.hasMedia && !message.mediaUrl)) && (
+            <MediaDisplay
+              media={{
+                url: message.mediaUrl || '',
+                resourceType: message.mediaType || 'image',
+                publicId: message.mediaPublicId || '',
+                format: message.mediaFormat || '',
+                messageId: message.id,
+                timestamp: message.mediaTimestamp || new Date().getTime()
+              }}
+            />
+          )}
+
+          {/* Timestamp */}
+          <div className="message-time">
+            {new Date(message.createdAt).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
           </div>
-        )}
-        
-        {/* Show message content if any */}
-        {message.content && (
-          <div className="message-content">{message.content}</div>
-        )}
-        
-        {/* Show media content */}
-        {(message.mediaUrl || (message.hasMedia && !message.mediaUrl)) && (
-          <MediaDisplay 
-            media={{
-              url: message.mediaUrl || '',
-              resourceType: message.mediaType || 'image', 
-              publicId: message.mediaPublicId || '',
-              format: message.mediaFormat || '',
-              messageId: message.id,
-              // Use message's media timestamp if available, or generate a new one
-              timestamp: message.mediaTimestamp || new Date().getTime()
-            }}
-          />
-        )}
-        
-        {/* Show reactions */}
+        </div>
+
+        {/* Show reactions below bubble */}
         {message.reactions && message.reactions.length > 0 && (
           <div className="message-reactions">
             {message.reactions.map((reaction, index) => (
@@ -616,33 +625,33 @@ function Chat() {
                       return String.fromCodePoint(parseInt(reaction.emoji, 16));
                     }
                   } catch (e) {
-                    console.error("Error rendering emoji", reaction.emoji, e);
-                    return '😊'; // Fallback emoji
+                    console.error('Error rendering emoji', reaction.emoji, e);
+                    return '😊';
                   }
                 })()}
               </span>
             ))}
           </div>
         )}
-        
+
         {/* Message actions (reply, react) */}
         <div className="message-actions">
-          <button 
-            className="action-button reply-button" 
+          <button
+            className="action-button reply-button"
             onClick={() => handleReply(message)}
             title="Reply"
           >
             ↩️
           </button>
-          <button 
-            className="action-button react-button" 
+          <button
+            className="action-button react-button"
             onClick={() => handleReaction(message.id)}
             title="React"
           >
             😊
           </button>
-          
-          {/* Show emoji picker for this message with improved positioning */}
+
+          {/* Show emoji picker for this message */}
           {showEmojiPicker && activeReactionMessage === message.id && (
             <div className={`emoji-picker-container ${isCurrentUser ? 'emoji-picker-sent' : 'emoji-picker-received'}`}>
               <div className="emoji-picker-close" onClick={() => {
@@ -660,13 +669,6 @@ function Chat() {
               />
             </div>
           )}
-        </div>
-        
-        <div className="message-time">
-          {new Date(message.createdAt).toLocaleTimeString([], { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}
         </div>
       </div>
     );
@@ -811,33 +813,41 @@ function Chat() {
     };
   }, []);
 
+  const friendName = friendInfo
+    ? (friendInfo.username || (friendInfo.user && friendInfo.user.username) || 'Friend')
+    : 'Loading...';
+
+  const friendInitial = friendName && friendName !== 'Loading...' ? friendName.charAt(0).toUpperCase() : '?';
+
   return (
     <div className="chat-container chat-fullscreen">
       <div className="chat-header">
-        <button className="back-button" onClick={() => navigate('/friends')}>
-          ← Back
-        </button>
-        <h2>
-          {friendInfo ? (
-            friendInfo.username || 
-            (friendInfo.user && friendInfo.user.username) || 
-            'Friend'
-          ) : 'Loading...'}
-        </h2>
-        
+        <div className="chat-header-left">
+          <button className="back-button" onClick={() => navigate('/friends')}>
+            ← <span>Back</span>
+          </button>
+          <div className="chat-friend-avatar">
+            {friendInitial}
+            {socketConnected && <div className="chat-friend-online-dot" />}
+          </div>
+          <div className="chat-header-info">
+            <p className="chat-header-name">{friendName}</p>
+            {socketConnected && <div className="chat-header-status">Online</div>}
+          </div>
+        </div>
+
         <div className="chat-actions">
-          <button 
-            onClick={() => navigate(`/games/${friendId}`)} 
+          <button
+            onClick={() => navigate(`/games/${friendId}`)}
             className="games-btn"
           >
-            🎮 Games
+            🎮 <span>Games</span>
           </button>
-          <button 
-            onClick={startVideoCall} 
+          <button
+            onClick={startVideoCall}
             className="video-call-btn"
-            disabled={!socketConnected}
           >
-            📹 Video Call
+            📹 <span>Video Call</span>
           </button>
         </div>
       </div>
@@ -856,19 +866,9 @@ function Chat() {
         style={{ pointerEvents: isScrollLocked ? 'none' : 'auto' }}
       >
         {loadingMore && (
-          <div className="loading-more-messages" style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            padding: '10px 15px',
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            borderRadius: '10px',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-            zIndex: 5
-          }}>
-            <div className="spinner"></div>
-            Loading more messages...
+          <div className="loading-more-messages">
+            <div className="spinner" />
+            Loading older messages...
           </div>
         )}
         
@@ -879,7 +879,10 @@ function Chat() {
         {loading && !loadingMore ? (
           <div className="loading-messages">Loading messages...</div>
         ) : messages.length === 0 ? (
-          <div className="no-messages">No messages yet. Start a conversation!</div>
+          <div className="no-messages">
+            <span className="no-messages-icon">💬</span>
+            <p>No messages yet.<br />Send your first message to start chatting! 💕</p>
+          </div>
         ) : (
           messages.map(renderMessage)
         )}
@@ -931,8 +934,8 @@ function Chat() {
           placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
           disabled={loading || isScrollLocked}
         />
-        <button type="submit" disabled={!messageInput.trim() || loading || isScrollLocked}>
-          Send
+        <button type="submit" disabled={!messageInput.trim() || loading || isScrollLocked} title="Send message">
+          ➤
         </button>
       </form>
     </div>

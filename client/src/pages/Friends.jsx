@@ -12,59 +12,50 @@ function Friends() {
   const [error, setError] = useState('');
   const [friendRequests, setFriendRequests] = useState([]);
   const navigate = useNavigate();
-  
-  // Environment-aware API URL
-  const API_URL = process.env.REACT_APP_API_URL || 
-    (process.env.NODE_ENV === 'production' 
-      ? 'https://chitchat-3l35.onrender.com' 
+
+  const API_URL = process.env.REACT_APP_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://chitchat-3l35.onrender.com'
       : 'http://localhost:5000/api'
     );
 
   console.log('API_URL configured as:', API_URL);
   console.log('Environment:', process.env.NODE_ENV);
 
-  // Memoize the fetchFriends function
+  const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : '?');
+
   const fetchFriends = useCallback(async () => {
     try {
       setLoading(true);
       const currentUser = getCurrentUser();
       console.log('Current user in fetchFriends:', currentUser);
-      
-      // More detailed check for authentication
       if (!currentUser) {
         console.error('Authentication issue: No user found');
         setError('You need to be logged in. Redirecting to login...');
         setTimeout(() => navigate('/login'), 2000);
         return;
       }
-      
       if (!currentUser.token) {
         console.error('Authentication issue: No token found', currentUser);
-        // Try to log the raw localStorage value for debugging
         const rawUser = localStorage.getItem('user');
         console.log('Raw localStorage user value:', rawUser);
         setError('Invalid authentication. Redirecting to login...');
         setTimeout(() => navigate('/login'), 2000);
         return;
       }
-      
       console.log('Fetching friends from:', `${API_URL}/friends`);
-      
       const response = await axios.get(`${API_URL}/friends`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
       console.log('Friends data:', response.data);
       setFriends(response.data);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching friends:', err);
       setLoading(false);
-      
-      // Better error handling
       if (err.response?.status === 401) {
         console.error('Unauthorized access. Token might be invalid or expired.');
-        localStorage.removeItem('user'); // Clear invalid authentication
+        localStorage.removeItem('user');
         setError('Your session has expired. Please login again.');
         setTimeout(() => navigate('/login'), 2000);
       } else if (err.response?.status === 404) {
@@ -75,18 +66,13 @@ function Friends() {
     }
   }, [navigate, API_URL]);
 
-  // Add function to fetch pending friend requests
   const fetchFriendRequests = useCallback(async () => {
     try {
       const currentUser = getCurrentUser();
-      if (!currentUser || !currentUser.token) {
-        return;
-      }
-      
+      if (!currentUser || !currentUser.token) return;
       const response = await axios.get(`${API_URL}/friends/requests`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
       setFriendRequests(response.data);
     } catch (err) {
       console.error('Error fetching friend requests:', err);
@@ -97,28 +83,19 @@ function Friends() {
     fetchFriends();
     fetchFriendRequests();
   }, [fetchFriends, fetchFriendRequests]);
-  
+
   const searchUsers = async () => {
     if (!searchTerm) return;
-    
     try {
       setLoading(true);
       const currentUser = getCurrentUser();
-      if (!currentUser || !currentUser.token) {
-        setError('You need to be logged in');
-        setLoading(false);
-        return;
-      }
-      
+      if (!currentUser || !currentUser.token) { setError('You need to be logged in'); setLoading(false); return; }
       const response = await axios.get(`${API_URL}/users/search?q=${searchTerm}`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
-      // Filter out users that are already friends
-      const filteredResults = response.data.filter(user => 
+      const filteredResults = response.data.filter(user =>
         !friends.some(friend => friend.id === user.id)
       );
-      
       setSearchResults(filteredResults);
       setLoading(false);
     } catch (err) {
@@ -130,23 +107,18 @@ function Friends() {
       }
     }
   };
-  
+
   const sendFriendRequest = async (userId) => {
     try {
       setLoading(true);
       const currentUser = getCurrentUser();
-      
       await axios.post(`${API_URL}/friends/${userId}`, {}, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
-      // Update search results to reflect sent request
-      setSearchResults(searchResults.map(user => 
-        user.id === userId ? {...user, requestSent: true} : user
+      setSearchResults(searchResults.map(user =>
+        user.id === userId ? { ...user, requestSent: true } : user
       ));
       setLoading(false);
-      
-      // Show a temporary success message
       setError('Friend request sent successfully!');
       setTimeout(() => setError(''), 3000);
     } catch (err) {
@@ -154,20 +126,16 @@ function Friends() {
       setError(err.response?.data?.error || 'Failed to send friend request');
     }
   };
-  
+
   const acceptFriendRequest = async (requestId) => {
     try {
       setLoading(true);
       const currentUser = getCurrentUser();
-      
       await axios.put(`${API_URL}/friends/requests/${requestId}/accept`, {}, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
-      // Refresh both lists
       await fetchFriendRequests();
       await fetchFriends();
-      
       setLoading(false);
       setError('Friend request accepted successfully!');
       setTimeout(() => setError(''), 3000);
@@ -181,12 +149,9 @@ function Friends() {
     try {
       setLoading(true);
       const currentUser = getCurrentUser();
-      
       await axios.put(`${API_URL}/friends/requests/${requestId}/reject`, {}, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
-      // Remove from requests list
       setFriendRequests(friendRequests.filter(request => request.id !== requestId));
       setLoading(false);
       setError('Friend request rejected');
@@ -201,12 +166,9 @@ function Friends() {
     try {
       setLoading(true);
       const currentUser = getCurrentUser();
-      
       await axios.delete(`${API_URL}/friends/${friendId}`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
-      // Remove from friends list
       setFriends(friends.filter(friend => friend.id !== friendId));
       setLoading(false);
     } catch (err) {
@@ -215,47 +177,57 @@ function Friends() {
     }
   };
 
-  const startChat = (friendId) => {
-    navigate(`/chat/${friendId}`);
-  };
+  const startChat = (friendId) => navigate(`/chat/${friendId}`);
 
   return (
     <div className="friends-container">
-      <h1>Friends</h1>
+      {/* Page Header */}
+      <div className="friends-page-header">
+        <h1>💬 Friends</h1>
+        <p>Connect, chat, and play together with the people you love</p>
+      </div>
+
+      {/* Status Messages */}
       {error && (
-        <div className={error.includes('successfully') ? "success-message" : "error-message"}>
-          {error.includes('successfully') ? '✓ ' : 'Error: '}{error}
-          {!error.includes('successfully') && (
-            <button onClick={() => window.location.reload()}>Try Again</button>
-          )}
+        <div className={error.includes('successfully') || error.includes('rejected') ? 'success-message' : 'error-message'}>
+          {error.includes('successfully') || error.includes('rejected')
+            ? `✅ ${error}`
+            : <>⚠️ {error} {!error.includes('successfully') && (
+              <button onClick={() => window.location.reload()}>Retry</button>
+            )}</>
+          }
         </div>
       )}
-      
-      {/* Add Friend Requests Section */}
+
+      {/* Friend Requests */}
       {friendRequests.length > 0 && (
-        <div className="requests-section">
-          <h2>Friend Requests</h2>
+        <div className="section-card requests-section">
+          <div className="section-title">
+            🔔 Friend Requests
+            <span className="section-title-badge">{friendRequests.length}</span>
+          </div>
           <div className="friend-requests">
             {friendRequests.map(request => (
               <div className="user-card" key={request.id}>
+                <div className="card-avatar">{getInitial(request.username)}</div>
                 <div className="user-info">
                   <h3>{request.username}</h3>
                   <p>{request.email}</p>
                 </div>
                 <div className="request-actions">
-                  <button 
+                  <button
                     onClick={() => acceptFriendRequest(request.id)}
                     disabled={loading}
                     className="accept-btn"
                   >
-                    Accept
+                    ✓ Accept
                   </button>
-                  <button 
+                  <button
                     onClick={() => rejectFriendRequest(request.id)}
                     disabled={loading}
                     className="reject-btn"
                   >
-                    Reject
+                    ✕ Reject
                   </button>
                 </div>
               </div>
@@ -263,78 +235,83 @@ function Friends() {
           </div>
         </div>
       )}
-      
-      <div className="search-section">
-        <h2>Find Friends</h2>
+
+      {/* Search Section */}
+      <div className="section-card search-section">
+        <div className="section-title">🔍 Find Friends</div>
         <div className="search-bar">
-          <input 
+          <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by username or email"
+            placeholder="Search by username or email..."
             onKeyPress={(e) => e.key === 'Enter' && searchUsers()}
           />
           <button onClick={searchUsers} disabled={loading || !searchTerm}>
-            {loading ? 'Searching...' : 'Search'}
+            {loading ? '...' : '🔍 Search'}
           </button>
         </div>
-        
-        {loading ? (
-          <p className="loading">Searching for users...</p>
-        ) : (
-          <div className="search-results">
-            {searchResults.length > 0 ? (
-              searchResults.map(user => (
-                <div className="user-card" key={user.id}>
-                  <div className="user-info">
-                    <h3>{user.username}</h3>
-                    <p>{user.email}</p>
-                  </div>
-                  <button 
-                    onClick={() => sendFriendRequest(user.id)}
-                    disabled={user.requestSent || loading}
-                    className={user.requestSent ? "sent" : ""}
-                  >
-                    {user.requestSent ? "Request Sent" : "Add Friend"}
-                  </button>
+
+        <div className="search-results">
+          {loading ? (
+            <div className="loading">Searching...</div>
+          ) : searchResults.length > 0 ? (
+            searchResults.map(user => (
+              <div className="user-card" key={user.id}>
+                <div className="card-avatar cyan">{getInitial(user.username)}</div>
+                <div className="user-info">
+                  <h3>{user.username}</h3>
+                  <p>{user.email}</p>
                 </div>
-              ))
-            ) : searchTerm ? (
-              <p>No users found with that username</p>
-            ) : null}
-          </div>
-        )}
+                <button
+                  onClick={() => sendFriendRequest(user.id)}
+                  disabled={user.requestSent || loading}
+                  className={user.requestSent ? 'sent' : 'add-friend-btn'}
+                >
+                  {user.requestSent ? '✓ Sent' : '+ Add'}
+                </button>
+              </div>
+            ))
+          ) : searchTerm && !loading ? (
+            <div className="no-results">No users found matching "{searchTerm}"</div>
+          ) : null}
+        </div>
       </div>
-      
-      <div className="friends-list">
-        <h2>My Friends</h2>
+
+      {/* Friends List */}
+      <div className="section-card">
+        <div className="section-title">
+          👥 My Friends
+          {friends.length > 0 && <span className="section-title-badge">{friends.length}</span>}
+        </div>
         {loading ? (
-          <p className="loading">Loading your friends...</p>
+          <div className="loading">Loading friends...</div>
         ) : friends.length > 0 ? (
           friends.map(friend => (
             <div className="friend-card" key={friend.id}>
+              <div className="card-avatar">
+                {getInitial(friend.username)}
+                <div className="online-dot" />
+              </div>
               <div className="friend-info">
                 <h3>{friend.username}</h3>
                 <p>{friend.email}</p>
               </div>
               <div className="friend-actions">
-                <button 
-                  onClick={() => startChat(friend.id)}
-                  className="chat-btn"
-                >
-                  Chat
+                <button onClick={() => startChat(friend.id)} className="chat-btn">
+                  💬 Chat
                 </button>
-                <button 
-                  onClick={() => removeFriend(friend.id)}
-                  className="remove-btn"
-                >
+                <button onClick={() => removeFriend(friend.id)} className="remove-btn">
                   Remove
                 </button>
               </div>
             </div>
           ))
         ) : (
-          <p>You don't have any friends yet</p>
+          <div className="empty-state">
+            <span className="empty-state-icon">💌</span>
+            <p>No friends yet! Use the search above to find and connect with people you know.</p>
+          </div>
         )}
       </div>
     </div>

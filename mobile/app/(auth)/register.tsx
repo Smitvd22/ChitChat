@@ -15,6 +15,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { Link } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
@@ -83,7 +84,13 @@ export default function RegisterScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          <Text style={styles.title}>ChitChat</Text>
+          <View style={styles.logoContainer}>
+            <Image 
+              source={require('../../assets/logo.png')} 
+              style={styles.logo} 
+              resizeMode="contain" 
+            />
+          </View>
           <Text style={styles.subtitle}>Create an Account</Text>
 
           {error ? (
@@ -207,6 +214,14 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     textAlign: 'center',
     marginBottom: Spacing.xs,
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  logo: {
+    height: 48,
+    width: 200,
   },
   subtitle: {
     fontSize: FontSize.lg,

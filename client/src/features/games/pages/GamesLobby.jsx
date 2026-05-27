@@ -70,12 +70,14 @@ const GamesLobby = () => {
           ← Back to Chat
         </button>
         <h1 className="games-lobby-title">
-          <span className="games-lobby-emoji">🎮</span> Games
+          <span className="games-lobby-emoji">🎮</span> Game Zone
         </h1>
         <div className="game-header-spacer" />
       </div>
 
-      <p className="games-lobby-subtitle">Choose a game to play with your friend!</p>
+      <p className="games-lobby-subtitle">
+        ⚡ Choose a game and challenge your partner!
+      </p>
 
       <div className="games-grid">
         {GAMES.map((game) => (

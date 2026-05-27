@@ -1,5 +1,6 @@
 // App group layout - authenticated screens with header
 import { Stack } from 'expo-router';
+import { Image } from 'react-native';
 import { Colors } from '../../constants/theme';
 
 export default function AppLayout() {
@@ -15,7 +16,16 @@ export default function AppLayout() {
     >
       <Stack.Screen
         name="friends"
-        options={{ title: 'ChitChat', headerBackVisible: false }}
+        options={{
+          headerTitle: () => (
+            <Image 
+              source={require('../../assets/logo.png')} 
+              style={{ width: 120, height: 32 }} 
+              resizeMode="contain" 
+            />
+          ),
+          headerBackVisible: false 
+        }}
       />
       <Stack.Screen
         name="chat/[friendId]"

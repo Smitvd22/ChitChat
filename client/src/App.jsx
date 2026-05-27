@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { getCurrentUser } from './services/authService';
 import { CallProvider } from './contexts/CallContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './App.css';
 import './styles/LoveTheme.css';
 import VideoCall from './pages/VideoCall';
@@ -24,115 +25,118 @@ function App() {
   const isWebView = new URLSearchParams(window.location.search).get('webview') === 'true';
 
   return (
-    <Router
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true
-      }}
-    >
-      <CallProvider>
-        <div className="App">
-          <div className="floating-hearts">
-            {[...Array(15)].map((_, i) => (
-              <div
-                key={`heart-${i}`}
-                className="heart"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  animationDuration: `${15 + Math.random() * 10}s`,
-                  animationDelay: `${Math.random() * 5}s`,
-                  transform: `scale(${0.5 + Math.random() * 0.5}) rotate(45deg)`,
-                }}
+    <ThemeProvider>
+      <Router
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true
+        }}
+      >
+        <CallProvider>
+          <div className="App">
+            <div className="floating-hearts">
+              {[...Array(15)].map((_, i) => (
+                <div
+                  key={`heart-${i}`}
+                  className="heart"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    animationDuration: `${15 + Math.random() * 15}s`,
+                    animationDelay: `${Math.random() * 10}s`,
+                    width: `${10 + Math.random() * 14}px`,
+                    height: `${10 + Math.random() * 14}px`,
+                  }}
+                />
+              ))}
+            </div>
+            {!isWebView && <Navbar />}
+            <Routes>
+              {/* Public routes */}
+              <Route path="/home" element={<Home />} />
+              <Route
+                path="/login"
+                element={isAuthenticated() ? <Navigate to="/friends" /> : <Login />}
               />
-            ))}
+              <Route
+                path="/register"
+                element={isAuthenticated() ? <Navigate to="/friends" /> : <Register />}
+              />
+
+              <Route path="/" element={<Home />} />
+
+              {/* Protected routes */}
+              <Route
+                path="/friends"
+                element={
+                  <ProtectedRoute>
+                    <Friends />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/chat/:friendId"
+                element={
+                  <ProtectedRoute>
+                    <Chat />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/videocall/:callId"
+                element={
+                  <ProtectedRoute>
+                    <VideoCall />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Game routes */}
+              <Route
+                path="/games/:friendId"
+                element={
+                  <ProtectedRoute>
+                    <GamesLobby />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/connect4"
+                element={
+                  <ProtectedRoute>
+                    <Connect4Page />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/tictactoe"
+                element={
+                  <ProtectedRoute>
+                    <TicTacToePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/dots-boxes"
+                element={
+                  <ProtectedRoute>
+                    <DotsBoxesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/memory-cards"
+                element={
+                  <ProtectedRoute>
+                    <MemoryCardsPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Redirect all other routes */}
+              <Route path="*" element={isAuthenticated() ? <Navigate to="/friends" /> : <Navigate to="/login" />} />
+            </Routes>
           </div>
-          {!isWebView && <Navbar />}
-          <Routes>
-            {/* Public routes */}
-            <Route path="/home" element={<Home />} />
-            <Route
-              path="/login"
-              element={isAuthenticated() ? <Navigate to="/friends" /> : <Login />}
-            />
-            <Route
-              path="/register"
-              element={isAuthenticated() ? <Navigate to="/friends" /> : <Register />}
-            />
-
-            <Route path="/" element={<Home />} />
-
-            {/* Protected routes */}
-            <Route
-              path="/friends"
-              element={
-                <ProtectedRoute>
-                  <Friends />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/chat/:friendId"
-              element={
-                <ProtectedRoute>
-                  <Chat />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/videocall/:callId"
-              element={
-                <ProtectedRoute>
-                  <VideoCall />
-                </ProtectedRoute>
-              }
-            />
-            {/* Game routes */}
-            <Route
-              path="/games/:friendId"
-              element={
-                <ProtectedRoute>
-                  <GamesLobby />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games/:friendId/connect4"
-              element={
-                <ProtectedRoute>
-                  <Connect4Page />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games/:friendId/tictactoe"
-              element={
-                <ProtectedRoute>
-                  <TicTacToePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games/:friendId/dots-boxes"
-              element={
-                <ProtectedRoute>
-                  <DotsBoxesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/games/:friendId/memory-cards"
-              element={
-                <ProtectedRoute>
-                  <MemoryCardsPage />
-                </ProtectedRoute>
-              }
-            />
-            {/* Redirect all other routes */}
-            <Route path="*" element={isAuthenticated() ? <Navigate to="/friends" /> : <Navigate to="/login" />} />
-          </Routes>
-        </div>
-      </CallProvider>
-    </Router>
+        </CallProvider>
+      </Router>
+    </ThemeProvider>
   );
 }
 

@@ -1,17 +1,191 @@
+/* ============================================================
+   ChitChat — Neon Romantic Design System
+   LoveTheme.css — Global Design Tokens + Animations
+   ============================================================ */
+
+/* ===== LIGHT MODE (Default) ===== */
 :root {
-  --primary-pink: #ff6b8b;
-  --secondary-pink: #ff8fa3;
-  --light-pink: #ffd1dc;
-  --primary-cyan: #4dd0e1;
-  --secondary-cyan: #80deea;
-  --light-cyan: #b3e5fc;
-  --dark-cyan: #00acc1;
-  --gradient-love: linear-gradient(135deg, var(--primary-cyan), var(--primary-pink));
-  --gradient-soft: linear-gradient(135deg, var(--secondary-cyan), var(--secondary-pink));
-  --heart-color: #e91e63;
+  /* Brand Colors */
+  --primary: #FF6AFF;
+  --primary-hover: #FF8AD8;
+  --primary-rgb: 255, 106, 255;
+  --secondary: #72D3DC;
+  --secondary-hover: #5BC4CE;
+  --secondary-rgb: 114, 211, 220;
+  --purple-accent: #8B5CF6;
+
+  /* Backgrounds */
+  --bg-main: #FFF9FD;
+  --bg-secondary: #FFF0FA;
+  --bg-tertiary: #F5E8F8;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --bg-card-solid: #FFFFFF;
+  --bg-glass: rgba(255, 255, 255, 0.72);
+  --bg-input: #FFFFFF;
+  --bg-hover: rgba(var(--primary-rgb), 0.07);
+
+  /* Text */
+  --text-primary: #1C1B22;
+  --text-secondary: #5D6472;
+  --text-muted: #8F96A3;
+  --text-on-primary: #FFFFFF;
+
+  /* Borders */
+  --border-color: #E8DDF0;
+  --border-color-strong: #D4C5E2;
+  --border-input: #E8DDF0;
+  --border-input-focus: var(--primary);
+
+  /* Nav */
+  --nav-bg: rgba(255, 249, 253, 0.9);
+  --nav-active-bg: rgba(var(--primary-rgb), 0.12);
+  --nav-active-icon: var(--primary);
+  --nav-inactive-icon: #7E8799;
+  --nav-hover-bg: rgba(var(--primary-rgb), 0.1);
+
+  /* Shadows & Glows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.09);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --glow-pink: 0 0 30px rgba(var(--primary-rgb), 0.35);
+  --glow-cyan: 0 0 30px rgba(114, 211, 220, 0.3);
+  --glow-pink-sm: 0 0 12px rgba(var(--primary-rgb), 0.4);
+  --glow-cyan-sm: 0 0 12px rgba(114, 211, 220, 0.35);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 12px 40px rgba(var(--primary-rgb), 0.18), 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* Radius */
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-pill: 999px;
+  --radius-bubble-sent: 20px 20px 4px 20px;
+  --radius-bubble-received: 20px 20px 20px 4px;
+
+  /* Chat */
+  --bubble-sent-bg: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  --bubble-sent-text: #FFFFFF;
+  --bubble-received-bg: #F1F3F8;
+  --bubble-received-text: #1C1B22;
+  --online-dot: #57F287;
+
+  /* Buttons */
+  --btn-primary-bg: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  --btn-primary-text: #FFFFFF;
+  --btn-primary-shadow: 0 4px 16px rgba(var(--primary-rgb), 0.45);
+  --btn-secondary-bg: rgba(var(--primary-rgb), 0.12);
+  --btn-secondary-border: var(--primary);
+  --btn-secondary-text: var(--primary);
+  --btn-gaming-bg: linear-gradient(135deg, var(--secondary), #6AA8FF);
+
+  /* Status */
+  --success: #57F287;
+  --warning: #FFCC66;
+  --danger: #FF5D73;
+  --info: var(--secondary);
+  --badge-notif: #FF4FA3;
+
+  /* Misc */
+  --scrollbar-thumb: rgba(var(--primary-rgb), 0.3);
+  --scrollbar-track: transparent;
+  --divider: rgba(0, 0, 0, 0.06);
+  --overlay: rgba(0, 0, 0, 0.4);
+
+  /* Specific Thematic Tokens */
+  --cyan-accent: #72D3DC;
+  --purple-accent: #A855F7;
+  --primary-pink: #FF6AFF;
+  
+  --light-cyan: rgba(114, 211, 220, 0.15);
+  --light-pink: rgba(var(--primary-rgb), 0.15);
+  --dark-glass: rgba(25, 28, 36, 0.6);
+  --light-glass: rgba(255, 255, 255, 0.85);
+
+  --gradient-love: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  --gradient-soft: linear-gradient(135deg, var(--secondary), #6AA8FF);
+  
+  --heart-color: var(--primary);
+  --sparkle-color: var(--secondary);
 }
 
-/* Floating hearts background */
+/* ===== DARK MODE ===== */
+[data-theme="dark"] {
+  /* Brand Colors (Cyan for Dark Mode) */
+  --primary: #72D3DC;
+  --primary-hover: #5BC4CE;
+  --primary-rgb: 114, 211, 220;
+  --secondary: #FF6AFF;
+  --secondary-hover: #FF8AD8;
+  --secondary-rgb: 255, 106, 255;
+  
+  /* Backgrounds */
+  --bg-main: #070B1A;
+  --bg-secondary: #10182B;
+  --bg-tertiary: #16213A;
+  --bg-card: rgba(16, 24, 43, 0.85);
+  --bg-card-solid: #10182B;
+  --bg-glass: rgba(16, 24, 43, 0.72);
+  --bg-input: #141D33;
+  --bg-hover: rgba(114, 211, 220, 0.08);
+
+  /* Text */
+  --text-primary: #FFFFFF;
+  --text-secondary: #B8C0D4;
+  --text-muted: #6F7891;
+  --text-on-primary: #FFFFFF;
+
+  /* Borders */
+  --border-color: #1E2D4D;
+  --border-color-strong: #25314D;
+  --border-input: #25314D;
+  --border-input-focus: #72D3DC;
+
+  /* Navbar specific */
+  --nav-bg: rgba(13, 15, 25, 0.85);
+  --nav-active-bg: rgba(114, 211, 220, 0.18);
+  --nav-active-icon: #72D3DC;
+  --nav-inactive-icon: #6F7891;
+  --nav-hover-bg: rgba(114, 211, 220, 0.10);
+
+  /* Shadows & Glows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --glow-pink: 0 0 40px rgba(114, 211, 220, 0.2);
+  --glow-cyan: 0 0 40px rgba(114, 211, 220, 0.5);
+  --glow-pink-sm: 0 0 15px rgba(114, 211, 220, 0.3);
+  --glow-cyan-sm: 0 0 15px rgba(114, 211, 220, 0.6);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4), 0 0 1px rgba(114, 211, 220, 0.1);
+  --shadow-card-hover: 0 12px 40px rgba(114, 211, 220, 0.25), 0 0 20px rgba(114, 211, 220, 0.15);
+
+  /* Chat */
+  --bubble-sent-bg: linear-gradient(135deg, #72D3DC, #6AA8FF);
+  --bubble-sent-text: #FFFFFF;
+  --bubble-received-bg: #1B2135;
+  --bubble-received-text: #E2E8F0;
+  --online-dot: #57F287;
+
+  /* Buttons */
+  --btn-primary-bg: linear-gradient(135deg, #72D3DC, #6AA8FF);
+  --btn-primary-shadow: 0 4px 20px rgba(114, 211, 220, 0.6);
+  --btn-secondary-bg: rgba(114, 211, 220, 0.1);
+  --btn-secondary-border: #72D3DC;
+  --btn-secondary-text: #72D3DC;
+
+  /* Misc */
+  --scrollbar-thumb: rgba(114, 211, 220, 0.4);
+  --divider: rgba(255, 255, 255, 0.06);
+  --overlay: rgba(0, 0, 0, 0.7);
+
+  /* Legacy compat */
+  --light-pink: rgba(114, 211, 220, 0.15);
+  --light-cyan: rgba(114, 211, 220, 0.15);
+}
+
+/* ===== FLOATING HEARTS (Upgraded) ===== */
 .floating-hearts {
   position: fixed;
   top: 0;
@@ -19,121 +193,178 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
-  z-index: -1;
+  z-index: 0;
   overflow: hidden;
 }
 
 .heart {
   position: absolute;
-  width: 20px;
-  height: 20px;
-  background-color: var(--light-pink);
+  bottom: -30px;
+  width: 18px;
+  height: 18px;
+  background: var(--primary);
   transform: rotate(45deg);
-  opacity: 0.2;
-  animation: float-heart 15s linear infinite;
+  opacity: 0;
+  animation: floatHeart linear infinite;
+  filter: blur(0.5px);
 }
 
-.heart::before, .heart::after {
+.heart::before,
+.heart::after {
   content: "";
-  width: 20px;
-  height: 20px;
-  background-color: var(--light-pink);
+  width: 18px;
+  height: 18px;
+  background: inherit;
   border-radius: 50%;
   position: absolute;
 }
 
-.heart::before {
-  top: -10px;
-  left: 0;
+.heart::before { top: -9px; left: 0; }
+.heart::after  { left: -9px; top: 0; }
+
+.heart:nth-child(odd)  { background: var(--primary); box-shadow: 0 0 8px rgba(255,106,255,0.6); }
+.heart:nth-child(even) { background: var(--secondary); box-shadow: 0 0 8px rgba(114,211,220,0.6); }
+.heart:nth-child(3n)   { background: var(--purple-accent); box-shadow: 0 0 8px rgba(139,92,246,0.5); }
+
+@keyframes floatHeart {
+  0%   { transform: rotate(45deg) translateY(0) scale(0.5); opacity: 0; }
+  10%  { opacity: 0.35; }
+  90%  { opacity: 0.2; }
+  100% { transform: rotate(45deg) translateY(-110vh) scale(0.8); opacity: 0; }
 }
 
-.heart::after {
-  left: -10px;
-  top: 0;
+/* ===== GLOBAL ANIMATION KEYFRAMES ===== */
+@keyframes neonPulse {
+  0%, 100% { box-shadow: var(--glow-pink); }
+  50%       { box-shadow: 0 0 50px rgba(114, 211, 220, 0.6), 0 0 100px rgba(114, 211, 220, 0.2); }
 }
 
-.heart:nth-child(2n) {
-  background-color: var(--light-cyan);
-}
-.heart:nth-child(2n)::before, .heart:nth-child(2n)::after {
-  background-color: var(--light-cyan);
+@keyframes cyanPulse {
+  0%, 100% { box-shadow: var(--glow-cyan); }
+  50%       { box-shadow: 0 0 50px rgba(114, 211, 220, 0.6), 0 0 100px rgba(114, 211, 220, 0.2); }
 }
 
-@keyframes float-heart {
-  0% {
-    transform: rotate(45deg) translateY(0) translateX(0);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.2;
-  }
-  90% {
-    opacity: 0.2;
-  }
-  100% {
-    transform: rotate(45deg) translateY(-100vh) translateX(20px);
-    opacity: 0;
-  }
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
 }
 
-/* Global style overrides */
-body {
-  background-color: #fcf7f8;
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Button styles */
-.btn-love {
-  background: var(--gradient-love);
-  color: white;
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.18); }
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; transform: scale(0.8); }
+  40%            { opacity: 1; transform: scale(1); }
+}
+
+@keyframes orbitGlow {
+  0%   { transform: translate(-50%, -50%) rotate(0deg) translateX(200px) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) translateX(200px) rotate(-360deg); }
+}
+
+@keyframes meshShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* ===== UTILITY CLASSES ===== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-gaming {
+  background: linear-gradient(135deg, var(--secondary), var(--purple-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.neon-btn-primary {
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   border: none;
-  border-radius: 25px;
-  padding: 10px 24px;
-  box-shadow: 0 4px 10px rgba(255, 107, 139, 0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: var(--btn-primary-shadow);
+  letter-spacing: 0.3px;
 }
 
-.btn-love:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(255, 107, 139, 0.4);
+.neon-btn-primary:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 30px rgba(114, 211, 220, 0.6);
 }
 
-.btn-love-outline {
-  background: transparent;
-  color: var(--primary-pink);
-  border: 2px solid var(--primary-pink);
-  border-radius: 25px;
-  padding: 8px 22px;
+.neon-btn-primary:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.neon-btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1.5px solid var(--btn-secondary-border);
+  border-radius: var(--radius-md);
+  padding: 11px 26px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
   transition: all 0.3s ease;
 }
 
-.btn-love-outline:hover {
-  background: rgba(255, 107, 139, 0.1);
+.neon-btn-secondary:hover {
+  background: rgba(114, 211, 220, 0.2);
+  box-shadow: var(--glow-cyan-sm);
   transform: translateY(-2px);
 }
 
-/* Card styles */
-.love-card {
-  border-radius: 15px;
-  background: white;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border-top: 4px solid var(--primary-cyan);
-  transition: all 0.3s ease;
-}
-
-.love-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-}
-
-/* Heart pulse animation */
-@keyframes heart-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
-}
-
 .pulse-heart {
-  animation: heart-pulse 1.5s infinite;
-  color: var(--heart-color);
+  animation: heartPulse 1.5s infinite;
+  color: var(--primary);
 }
+
+/* ===== SCROLLBAR STYLING ===== */
+* { scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+*::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 99px; }
