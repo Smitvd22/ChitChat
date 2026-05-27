@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getCurrentUser, logout } from '../services/authService';
 import { useTheme } from '../contexts/ThemeContext';
+import logoImg from '../assets/ChitChatLogoSmall.png';
 import '../styles/Navbar.css';
 
 const Navbar = () => {
@@ -70,7 +71,7 @@ const Navbar = () => {
       <div className="navbar-container">
         {/* Logo */}
         <Link to="/home" className="navbar-logo">
-          <img src={process.env.PUBLIC_URL + '/ChitChatLogoSmall.png'} alt="ChitChat" className="navbar-logo-img" />
+          <img src={logoImg} alt="ChitChat" className="navbar-logo-img" />
           <span className="navbar-logo-text">ChitChat</span>
         </Link>
 

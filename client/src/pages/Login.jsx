@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { login, getCurrentUser } from '../services/authService';
+import logoImg from '../assets/ChitChatLogo.png';
 import '../styles/Auth.css';
 
 function Login() {
@@ -52,7 +53,7 @@ function Login() {
       <div className="auth-card">
         {/* Brand */}
         <div className="auth-brand">
-          <img src={process.env.PUBLIC_URL + '/ChitChatLogo.png'} alt="ChitChat" className="auth-logo-img" />
+          <img src={logoImg} alt="ChitChat" className="auth-logo-img" />
         </div>
 
         <h2>Welcome Back</h2>

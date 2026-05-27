@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../services/authService';
+import logoImg from '../assets/ChitChatLogo.png';
 import '../styles/Auth.css';
 
 function Register() {
@@ -89,7 +90,7 @@ function Register() {
       <div className="auth-card">
         {/* Brand */}
         <div className="auth-brand">
-          <img src={process.env.PUBLIC_URL + '/ChitChatLogo.png'} alt="ChitChat" className="auth-logo-img" />
+          <img src={logoImg} alt="ChitChat" className="auth-logo-img" />
         </div>
 
         <h2>Create Account</h2>
