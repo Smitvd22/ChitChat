@@ -6,6 +6,9 @@ import { useCall } from '../contexts/CallContext';
 import MediaUpload from '../components/MediaUpload';
 import MediaDisplay from '../components/MediaDisplay';
 import EmojiPicker from 'emoji-picker-react';
+import { useVibeType } from '../components/vibetype/useVibeType';
+import VibeTypeButton from '../components/vibetype/VibeTypeButton';
+import VibeTypeCard from '../components/vibetype/VibeTypeCard';
 import '../styles/Chat.css';
 
 function Chat() {
@@ -26,6 +29,14 @@ function Chat() {
   const [initialConnecting, setInitialConnecting] = useState(true);
   const [isScrollLocked, setIsScrollLocked] = useState(false); // New state for scroll locking
   const [showMediaUpload, setShowMediaUpload] = useState(false); // New state for media upload
+  const [vibeMetadata, setVibeMetadata] = useState(null); // VibeType state
+
+  const { launchVibeType } = useVibeType(useCallback((payload) => {
+    setMessageInput(prev => prev + (prev && payload.text ? ' ' : '') + payload.text);
+    if (payload.metadata && (payload.metadata.expressions?.length || payload.metadata.gestures?.length)) {
+      setVibeMetadata(payload.metadata);
+    }
+  }, []));
 
   // New state for reply and reactions
   const [replyingTo, setReplyingTo] = useState(null);
@@ -479,8 +490,13 @@ function Chat() {
     }
     
     try {
+      let finalContent = messageInput;
+      if (vibeMetadata) {
+        finalContent += `|VIBE_META:${JSON.stringify(vibeMetadata)}`;
+      }
+
       const newMessage = {
-        content: messageInput,
+        content: finalContent,
         receiverId: friendId,
         senderId: currentUser.id,
         // Add replyToId if replying to a message
@@ -493,6 +509,7 @@ function Chat() {
       
       // Clear input and reset reply state
       setMessageInput('');
+      setVibeMetadata(null);
       setReplyingTo(null);
       
       // Scroll to bottom after sending
@@ -586,7 +603,24 @@ function Chat() {
 
           {/* Show message content if any */}
           {message.content && (
-            <div className="message-content">{message.content}</div>
+            <div className="message-content">
+              {(() => {
+                const parts = message.content.split('|VIBE_META:');
+                const textPart = parts[0];
+                let metaPart = null;
+                if (parts.length > 1) {
+                  try {
+                    metaPart = JSON.parse(parts[1]);
+                  } catch(e) {}
+                }
+                return (
+                  <>
+                    {textPart}
+                    {metaPart && <VibeTypeCard metadata={metaPart} />}
+                  </>
+                );
+              })()}
+            </div>
           )}
 
           {/* Show media content */}
@@ -920,6 +954,7 @@ function Chat() {
       
       {/* Message form with improved mobile support */}
       <form className="message-form" onSubmit={sendMessage}>
+        <VibeTypeButton onClick={launchVibeType} disabled={loading || isScrollLocked} />
         <button 
           type="button" 
           className="media-button"
