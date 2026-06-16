@@ -6,7 +6,7 @@ export const initializeDatabase = async () => {
   if (isInitialized) return;
   
   try {
-    // Create users table if it doesn't exist
+    // Create users table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -19,7 +19,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // Create friendships table if it doesn't exist
+    // Create friendships table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS friendships (
         id SERIAL PRIMARY KEY,
@@ -34,7 +34,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // Create messages table if it doesn't exist with all required columns
+    // Create messages table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS messages (
         id SERIAL PRIMARY KEY,
@@ -54,7 +54,7 @@ export const initializeDatabase = async () => {
       )
     `);
 
-    // Create message_reactions table if it doesn't exist
+    // Create message_reactions table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS message_reactions (
         id SERIAL PRIMARY KEY,
@@ -68,100 +68,6 @@ export const initializeDatabase = async () => {
         UNIQUE(message_id, user_id, emoji)
       )
     `);
-
-    console.log('Database tables initialized successfully');
-    await addMissingColumns();
-    isInitialized = true;
-  } catch (error) {
-    console.error('Error initializing database:', error);
-    throw error;
-  }
-};
-
-// Function to check and add missing columns to existing tables
-export const addMissingColumns = async () => {
-  try {
-    // Check and add missing columns to users table
-    const userColumns = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'users'
-    `);
-    
-    const existingUserColumns = userColumns.rows.map(row => row.column_name);
-    
-    if (!existingUserColumns.includes('mobile')) {
-      await pool.query(`ALTER TABLE users ADD COLUMN mobile VARCHAR(20)`);
-      console.log('Added mobile column to users table');
-    }
-
-    if (!existingUserColumns.includes('last_seen')) {
-      await pool.query(`ALTER TABLE users ADD COLUMN last_seen TIMESTAMP DEFAULT NOW()`);
-      console.log('Added last_seen column to users table');
-    }
-
-    // Check and add missing columns to friendships table
-    const friendshipColumns = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'friendships'
-    `);
-    
-    const existingFriendshipColumns = friendshipColumns.rows.map(row => row.column_name);
-    
-    if (!existingFriendshipColumns.includes('updated_at')) {
-      await pool.query(`ALTER TABLE friendships ADD COLUMN updated_at TIMESTAMP DEFAULT NOW()`);
-      console.log('Added updated_at column to friendships table');
-    }
-
-    // Check and add missing columns to messages table
-    const messageColumns = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'messages'
-    `);
-    
-    const existingMessageColumns = messageColumns.rows.map(row => row.column_name);
-    
-    const requiredMessageColumns = [
-      { name: 'read', type: 'BOOLEAN DEFAULT FALSE' },
-      { name: 'media_url', type: 'VARCHAR(500)' },
-      { name: 'media_type', type: 'VARCHAR(50)' },
-      { name: 'media_public_id', type: 'VARCHAR(255)' },
-      { name: 'media_format', type: 'VARCHAR(50)' },
-      { name: 'reply_to_id', type: 'INTEGER REFERENCES messages(id) ON DELETE CASCADE' }
-    ];
-
-    for (const column of requiredMessageColumns) {
-      if (!existingMessageColumns.includes(column.name)) {
-        await pool.query(`ALTER TABLE messages ADD COLUMN ${column.name} ${column.type}`);
-        console.log(`Added ${column.name} column to messages table`);
-      }
-    }
-
-    // Create message_reactions table if it doesn't exist
-    const tableExists = await pool.query(`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_name = 'message_reactions'
-    `);
-
-    if (tableExists.rows.length === 0) {
-      await pool.query(`
-        CREATE TABLE message_reactions (
-          id SERIAL PRIMARY KEY,
-          message_id INTEGER NOT NULL,
-          user_id INTEGER NOT NULL,
-          emoji VARCHAR(50) NOT NULL,
-          emoji_name VARCHAR(100),
-          created_at TIMESTAMP DEFAULT NOW(),
-          FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-          UNIQUE(message_id, user_id, emoji)
-        )
-      `);
-      console.log('Created message_reactions table');
-    }
 
     // Create triggers for updated_at columns
     await pool.query(`
@@ -181,9 +87,11 @@ export const addMissingColumns = async () => {
       FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
     `);
 
-    console.log('Database migration completed successfully');
+    console.log('Database tables initialized successfully with clean schema');
+    isInitialized = true;
   } catch (error) {
-    console.error('Error during database migration:', error);
+    console.error('Error initializing database:', error);
+    throw error;
   }
 };
 
