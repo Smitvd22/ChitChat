@@ -414,3 +414,21 @@
 @media (max-width: 480px) {
   .friends-container { padding: 16px 12px 60px; }
 }
+
+/* ===== PRESENCE STATUS ===== */
+.friend-status {
+  font-size: 0.78rem !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.friend-status.status-online {
+  color: var(--online-dot, #57f287) !important;
+  font-weight: 600;
+}
+
+.friend-status.status-offline {
+  color: var(--text-muted) !important;
+  font-weight: 400;
+}

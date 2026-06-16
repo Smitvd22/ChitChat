@@ -1,5 +1,5 @@
 import express from 'express';
-import { getChatHistory, sendMessage, sendMediaMessage, addReaction, getReactions } from '../controllers/messageController.js';
+import { getChatHistory, sendMessage, sendMediaMessage, addReaction, getReactions, markMessagesAsRead } from '../controllers/messageController.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -11,6 +11,7 @@ router.use(authenticateToken);
 router.get('/:friendId', getChatHistory);
 router.post('/', sendMessage);
 router.post('/media', sendMediaMessage);
+router.put('/read/:friendId', markMessagesAsRead);
 
 // New routes for reactions
 router.post('/reactions', addReaction);

@@ -274,6 +274,22 @@
 .message.sent .message-time { color: rgba(255,255,255,0.75); }
 .message.received .message-time { color: var(--text-muted); }
 
+.message-status {
+  margin-left: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.message-status.read {
+  color: var(--read-receipt-color, #38bdf8);
+  text-shadow: 0 0 2px rgba(0,0,0,0.2);
+}
+
+.message-status.delivered {
+  color: rgba(255, 255, 255, 0.6);
+}
+
 /* ===== REPLY CONTEXT ===== */
 .reply-context {
   background: rgba(0, 0, 0, 0.06);
@@ -686,3 +702,277 @@
 body.chat-page-active .navbar { display: none !important; }
 
 :root { --vh: 1vh; }
+
+/* ===== MESSAGE ENTRANCE ANIMATION ===== */
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.message {
+  animation: messageAppear 0.25s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ===== OPTIMISTIC MESSAGE STATES ===== */
+.message-optimistic .message-bubble {
+  opacity: 0.75;
+}
+
+.message-failed .message-bubble {
+  opacity: 0.5;
+  border: 1.5px dashed var(--danger, #ff5d6e);
+}
+
+.message-failed .message-time {
+  color: var(--danger, #ff5d6e) !important;
+  font-weight: 600;
+}
+
+/* ===== MESSAGE SKELETON LOADER ===== */
+.message-skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.message-skeleton {
+  display: flex;
+  animation: fadeInUp 0.3s ease both;
+}
+
+.message-skeleton.skeleton-sent {
+  justify-content: flex-end;
+}
+
+.message-skeleton.skeleton-received {
+  justify-content: flex-start;
+}
+
+.skeleton-bubble {
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-card, rgba(255, 255, 255, 0.06));
+}
+
+.skeleton-sent .skeleton-bubble {
+  border-radius: 18px 18px 6px 18px;
+  background: rgba(var(--primary-rgb, 255, 107, 157), 0.12);
+}
+
+.skeleton-received .skeleton-bubble {
+  border-radius: 18px 18px 18px 6px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.06));
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 40%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.06) 60%,
+    transparent 100%
+  );
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ===== TYPING INDICATOR ===== */
+.typing-indicator-wrapper {
+  display: flex;
+  align-self: flex-start;
+  margin-bottom: 8px;
+  animation: messageAppear 0.25s ease both;
+}
+
+.typing-indicator-bubble {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bubble-received-bg, rgba(255, 255, 255, 0.08));
+  border-radius: 18px 18px 18px 6px;
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.1));
+}
+
+.typing-dots {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted, #999);
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.typing-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #999);
+  font-style: italic;
+  white-space: nowrap;
+}
+
+/* Header typing status */
+.chat-header-status.typing {
+  color: var(--secondary, #6aa8ff);
+  font-style: italic;
+  animation: typingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes typingPulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.chat-header-status.typing::before {
+  background: var(--secondary, #6aa8ff);
+  box-shadow: 0 0 6px rgba(106, 168, 255, 0.6);
+  animation: typingDotPulse 1.5s ease-in-out infinite;
+}
+
+.chat-header-status.offline {
+  color: var(--text-muted, #999);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+@keyframes typingDotPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+/* ===== NEW MESSAGES INDICATOR ===== */
+.new-messages-indicator {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--btn-primary-bg, linear-gradient(135deg, #ff6b9d, #c084fc));
+  color: white;
+  border: none;
+  border-radius: var(--radius-pill, 50px);
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(var(--primary-rgb, 255, 107, 157), 0.5);
+  animation: newMsgSlideUp 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+}
+
+.new-messages-indicator:hover {
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 28px rgba(var(--primary-rgb, 255, 107, 157), 0.7);
+}
+
+@keyframes newMsgSlideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.new-messages-arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.new-messages-text {
+  line-height: 1;
+}
+
+/* ===== SMOOTH SCROLL ===== */
+.messages-container {
+  scroll-behavior: auto; /* Use JS-controlled smooth scroll instead of CSS to avoid conflicts */
+}
+
+@media (max-width: 768px) {
+  .new-messages-indicator {
+    bottom: 80px;
+    font-size: 0.78rem;
+    padding: 7px 14px;
+  }
+
+  .typing-label {
+    display: none; /* Hide text on mobile, just show dots */
+  }
+}

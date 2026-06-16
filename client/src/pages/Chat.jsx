@@ -1,35 +1,47 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { getCurrentUser } from '../services/authService';
 import { useCall } from '../contexts/CallContext';
+import { useChatMessages } from '../hooks/useChatMessages';
+import { useSmartScroll } from '../hooks/useSmartScroll';
+import { usePresenceContext } from '../contexts/PresenceContext';
 import MediaUpload from '../components/MediaUpload';
-import MediaDisplay from '../components/MediaDisplay';
-import EmojiPicker from 'emoji-picker-react';
+import MessageBubble from '../components/chat/MessageBubble';
+import MessageSkeleton from '../components/chat/MessageSkeleton';
+import NewMessagesIndicator from '../components/chat/NewMessagesIndicator';
+import TypingIndicator from '../components/chat/TypingIndicator';
 import { useVibeType } from '../components/vibetype/useVibeType';
 import VibeTypeButton from '../components/vibetype/VibeTypeButton';
-import VibeTypeCard from '../components/vibetype/VibeTypeCard';
+import axios from 'axios';
 import '../styles/Chat.css';
 
 function Chat() {
   const { friendId } = useParams();
   const navigate = useNavigate();
-  const { socket } = useCall(); // Get socket from context
-  
-  const [messages, setMessages] = useState([]);
-  const [messageInput, setMessageInput] = useState('');
+  const { socket } = useCall();
+  const { getPresence, formatLastSeen, requestUserPresence } = usePresenceContext();
+
   const [friendInfo, setFriendInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [messageInput, setMessageInput] = useState('');
   const [socketConnected, setSocketConnected] = useState(false);
   const [showConnectionWarning, setShowConnectionWarning] = useState(false);
   const [initialConnecting, setInitialConnecting] = useState(true);
-  const [isScrollLocked, setIsScrollLocked] = useState(false); // New state for scroll locking
-  const [showMediaUpload, setShowMediaUpload] = useState(false); // New state for media upload
-  const [vibeMetadata, setVibeMetadata] = useState(null); // VibeType state
+  const [showMediaUpload, setShowMediaUpload] = useState(false);
+  const [vibeMetadata, setVibeMetadata] = useState(null);
+
+  // Reply & reaction state
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [activeReactionMessage, setActiveReactionMessage] = useState(null);
+
+  const messagesContainerRef = useRef(null);
+  const hasJoinedRoom = useRef(false);
+  const messagesEndRef = useRef(null);
+
+  const API_URL = process.env.REACT_APP_API_URL ||
+    (process.env.NODE_ENV === 'production'
+      ? 'https://chitchat-3l35.onrender.com'
+      : 'http://localhost:5000/api');
 
   const { launchVibeType } = useVibeType(useCallback((payload) => {
     setMessageInput(prev => prev + (prev && payload.text ? ' ' : '') + payload.text);
@@ -38,156 +50,67 @@ function Chat() {
     }
   }, []));
 
-  // New state for reply and reactions
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [activeReactionMessage, setActiveReactionMessage] = useState(null);
+  const {
+    unreadCount,
+    scrollToBottom,
+    saveScrollPosition,
+    restoreScrollPosition,
+    onNewMessage: onNewMessageScroll,
+  } = useSmartScroll(messagesContainerRef);
 
-  const socketRef = useRef(socket);
-  const hasJoinedRoom = useRef(false);
-  
-  const messagesContainerRef = useRef(null);
-  
-  const API_URL = process.env.REACT_APP_API_URL || 
-    (process.env.NODE_ENV === 'production' 
-      ? 'https://chitchat-3l35.onrender.com' 
-      : 'http://localhost:5000/api');
-  const MESSAGES_PER_PAGE = 20;
-  
-  // Add a preprocessMessage function to prepare media properly before rendering
-  const preprocessMessage = useCallback((message) => {
-    if (!message) return message;
-    
-    // Create a processed copy of the message
-    const processedMessage = {...message};
-    
-    // If message has media, ensure it's properly formatted for immediate loading
-    if (processedMessage.mediaUrl) {
-      // Add a timestamp to the message to force proper loading
-      processedMessage.mediaTimestamp = Date.now();
-      
-      // Ensure media type is set correctly
-      if (!processedMessage.mediaType) {
-        // Try to infer media type from URL or format
-        const url = processedMessage.mediaUrl.toLowerCase();
-        if (url.match(/\.(jpg|jpeg|png|gif|webp|svg|bmp)($|\?)/)) {
-          processedMessage.mediaType = 'image';
-        } else if (url.match(/\.(mp4|webm|mov|avi|flv|wmv|mkv)($|\?)/)) {
-          processedMessage.mediaType = 'video';
-        } else if (url.match(/\.(mp3|wav|ogg|aac|flac)($|\?)/)) {
-          processedMessage.mediaType = 'audio';
-        } else {
-          // Default to image if we can't determine
-          processedMessage.mediaType = 'image';
+  // Wrap scroll handler to also mark incoming messages as read
+  const handleNewMessage = useCallback((isOwnMessage) => {
+    onNewMessageScroll(isOwnMessage);
+    if (!isOwnMessage) {
+      // Small delay to ensure the message is in the DOM/state
+      setTimeout(() => {
+        const currentUser = getCurrentUser();
+        if (currentUser && currentUser.token) {
+          axios.put(`${API_URL}/messages/read/${friendId}`, {}, {
+            headers: { Authorization: `Bearer ${currentUser.token}` }
+          }).catch(console.error);
         }
-      }
+      }, 500);
     }
-    
-    return processedMessage;
-  }, []);
-  
-  // Preprocess messages before setting to state - defined before it's used in fetchChatHistory
-  const processMessages = useCallback((messages) => {
-    return messages.map(preprocessMessage);
-  }, [preprocessMessage]);
-  
-  // Modified function to fetch chat history with pagination
-  const fetchChatHistory = useCallback(async (pageNum = 1, append = false) => {
-    try {
-      // Lock scrolling while loading messages
-      setIsScrollLocked(true);
-      
-      const currentUser = getCurrentUser();
-      if (!currentUser || !currentUser.token) return;
+  }, [onNewMessageScroll, friendId, API_URL]);
 
-      const response = await axios.get(
-        `${API_URL}/messages/${friendId}?page=${pageNum}&limit=${MESSAGES_PER_PAGE}`, 
-        {
-          headers: { Authorization: `Bearer ${currentUser.token}` }
-        }
-      );
-      
-      // Get messages from response
-      const fetchedMessages = response.data.messages || response.data;
-      
-      // Debug log for reactions and replies
-      console.log("Fetched messages:", fetchedMessages);
-      fetchedMessages.forEach(msg => {
-        if (msg.replyToId) console.log(`Message ${msg.id} is replying to ${msg.replyToId}`);
-        if (msg.reactions && msg.reactions.length > 0) console.log(`Message ${msg.id} has ${msg.reactions.length} reactions`);
-      });
-      
-      if (fetchedMessages.length < MESSAGES_PER_PAGE) {
-        setHasMore(false);
-      }
-      
-      // Process messages to ensure media is properly formatted for immediate loading
-      const processedMessages = processMessages(fetchedMessages);
-      
-      // For pagination: add NEW messages at BEGINNING of array (older messages)
-      if (append) {
-        // We can remove the unused scroll position tracking variables
-        // and just update the messages directly
-        
-        setMessages(prev => {
-          const prevIds = new Set(prev.map(msg => msg.id));
-          const uniqueNewMessages = processedMessages.filter(msg => !prevIds.has(msg.id));
-          return [...uniqueNewMessages, ...prev]; // Prepend older messages
-        });
-        
-        // After adding new messages, adjust scroll position and ensure scroll lock is released
-        setTimeout(() => {
-          // Unlock scrolling after ensuring messages are rendered
-          setIsScrollLocked(false);
-        }, 300); // Increased timeout to ensure rendering completes
-      } else {
-        // First load - set processed messages
-        setMessages(processedMessages);
-        
-        // For initial load, scroll to bottom after a brief delay
-        setTimeout(() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-          }
-          // Unlock scrolling after ensuring messages are rendered
-          setIsScrollLocked(false);
-        }, 300); // Increased timeout to ensure rendering completes
-      }
-      
-      setLoading(false);
-      setLoadingMore(false);
-    } catch (err) {
-      console.error('Error fetching messages:', err);
-      setLoading(false);
-      setLoadingMore(false);
-      setError('Could not load chat history');
-      setIsScrollLocked(false); // Ensure scroll lock is released on error
-    }
-  }, [API_URL, friendId, processMessages]);
-  
+  // Chat messages hook
+  const {
+    messages,
+    loading,
+    loadingMore,
+    error,
+    setError,
+    hasMore,
+    friendTyping,
+    loadOlderMessages,
+    sendMessage,
+    sendMediaMessage,
+    sendReaction,
+    emitTyping,
+    markAsRead,
+  } = useChatMessages({
+    friendId,
+    socket,
+    onNewMessage: handleNewMessage,
+  });
+
   // Fetch friend information
   const fetchFriendInfo = useCallback(async () => {
     try {
       const currentUser = getCurrentUser();
-      
       if (!currentUser || !currentUser.token) {
-        console.error("No valid user token found");
         setError("Authentication error. Please login again.");
         navigate('/login');
         return;
       }
-      
-      console.log(`Fetching friend info for ID: ${friendId}`);
-      
-      // Only try the friends endpoint
+
       const friendsResponse = await axios.get(`${API_URL}/friends`, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
-      
+
       const friend = friendsResponse.data.find(f => f.id === parseInt(friendId, 10));
-      
       if (friend) {
-        console.log("Found friend in friends list:", friend);
         setFriendInfo(friend);
       } else {
         throw new Error("Friend not found");
@@ -196,9 +119,9 @@ function Chat() {
       console.error('Error fetching friend info:', err);
       setError('Could not load friend information. Please go back and try again.');
     }
-  }, [API_URL, friendId, navigate]);
-  
-  // Initial load - fetch friend info and most recent messages
+  }, [API_URL, friendId, navigate, setError]);
+
+  // Initial load
   useEffect(() => {
     const currentUser = getCurrentUser();
     if (!currentUser || !currentUser.token) {
@@ -206,652 +129,305 @@ function Chat() {
       return;
     }
     
-    setPage(1);
-    setHasMore(true);
-    setLoading(true);
-    setMessages([]);
-    
+    // Request instant presence
+    requestUserPresence(friendId);
     fetchFriendInfo();
-    fetchChatHistory(1, false);
-    
-  }, [friendId, fetchFriendInfo, fetchChatHistory, navigate]);
-  
-  // Modified scroll handler to load older messages when scrolling to top
-  const handleScroll = useCallback(() => {
-    if (!messagesContainerRef.current || isScrollLocked || loadingMore) return;
-    
-    const { scrollTop } = messagesContainerRef.current;
-    
-    // When user scrolls near TOP (within 50px), load older messages
-    if (scrollTop < 50 && !loadingMore && hasMore) {
-      console.log('Near top of scroll area, loading older messages');
-      setLoadingMore(true);
-      
-      // Use a short timeout to prevent multiple simultaneous loading attempts
-      setTimeout(() => {
-        // Double-check we're still in loading state to prevent duplicate loads
-        if (!loadingMore) {
-          // Load next page of messages
-          const nextPage = page + 1;
-          setPage(nextPage);
-          
-          fetchChatHistory(nextPage, true);
+  }, [friendId, fetchFriendInfo, navigate, requestUserPresence]);
+
+  // Scroll to first unread or bottom on initial message load
+  useEffect(() => {
+    if (!loading && messages.length > 0) {
+      requestAnimationFrame(() => {
+        // Find the first unread message sent by the friend
+        const firstUnread = messages.find(m => !m.read && String(m.senderId) === String(friendId));
+
+        if (firstUnread) {
+          const el = document.querySelector(`[data-message-id="${firstUnread.id}"]`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'auto', block: 'center' });
+          } else {
+            scrollToBottom(false);
+          }
+        } else {
+          scrollToBottom(false);
         }
-      }, 100);
+        
+        // Mark as read after we've rendered and scrolled
+        markAsRead();
+      });
     }
-  }, [fetchChatHistory, hasMore, loadingMore, page, isScrollLocked]);
-  
+    // Only on initial load transition
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  // Restore scroll after loading older messages
+  useEffect(() => {
+    if (!loadingMore) {
+      restoreScrollPosition();
+    }
+  }, [loadingMore, restoreScrollPosition]);
+
+  // Scroll handler for loading older messages
+  const handleScrollForOlderMessages = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container || loadingMore || !hasMore) return;
+
+    if (container.scrollTop < 80) {
+      saveScrollPosition();
+      loadOlderMessages();
+    }
+  }, [loadingMore, hasMore, saveScrollPosition, loadOlderMessages]);
+
   useEffect(() => {
     const container = messagesContainerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll);
-      return () => container.removeEventListener('scroll', handleScroll);
-    }
-  }, [handleScroll]);
-  
-  // Socket connection management
+    if (!container) return;
+
+    let ticking = false;
+    const throttledHandler = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScrollForOlderMessages();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    container.addEventListener('scroll', throttledHandler, { passive: true });
+    return () => container.removeEventListener('scroll', throttledHandler);
+  }, [handleScrollForOlderMessages]);
+
+  // Socket connection management — NO messages in deps
   useEffect(() => {
-    // Update socket ref
-    socketRef.current = socket;
-    
     if (!socket || !friendId) return;
-    
+
     const currentUser = getCurrentUser();
     if (!currentUser) return;
-    
+
     const roomId = [currentUser.id, friendId].sort().join('-');
-    
-    // Set initial connection state
+
     setSocketConnected(socket.connected);
-    
+
     const handleConnect = () => {
-      console.log("Socket connected in Chat component");
       setSocketConnected(true);
       setInitialConnecting(false);
-      
-      // Only join room if we haven't already
+
       if (!hasJoinedRoom.current) {
-        console.log(`Joining chat room: ${roomId}`);
         socket.emit('join-room', roomId);
-        
-        // Also join rooms for reaction notifications for all loaded messages
-        messages.forEach(msg => {
-          socket.emit('join-room', `message-${msg.id}`);
-        });
-        
         hasJoinedRoom.current = true;
       }
     };
 
     const handleDisconnect = () => {
-      console.log("Socket disconnected in Chat component");
       setSocketConnected(false);
-      hasJoinedRoom.current = false; // Reset flag on disconnect
+      hasJoinedRoom.current = false;
     };
-    
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
-    
-    // Call handleConnect immediately if already connected
+
     if (socket.connected) {
       handleConnect();
     }
-    
+
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       hasJoinedRoom.current = false;
     };
-  }, [socket, friendId, messages]);
-  
-  // Listen for new messages - modified to add at end of array
-  useEffect(() => {
-    if (!socket) return;
-    
-    const handleNewMessage = (message) => {
-      // When new message arrives, add to end of message list
-      setMessages(prevMessages => {
-        // Check if message already exists (avoid duplicates)
-        if (prevMessages.some(m => m.id === message.id)) {
-          return prevMessages;
-        }
-        
-        // Add new message
-        const newMessages = [...prevMessages, message];
-        
-        // Scroll to bottom after a brief delay
-        setTimeout(() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-          }
-        }, 100);
-        
-        return newMessages;
-      });
-    };
-    
-    socket.on('new-message', handleNewMessage);
-    
-    return () => {
-      socket.off('new-message', handleNewMessage);
-    };
-  }, [friendId, socket]);
-  
-  // Listen for reaction updates
-  useEffect(() => {
-    if (!socket) return;
-    
-    // Handle new reaction added to a message
-    const handleNewReaction = (reaction) => {
-      console.log("Received new reaction:", reaction);
-      setMessages(prevMessages => {
-        return prevMessages.map(msg => {
-          if (msg.id === reaction.messageId) {
-            // Create reactions array if it doesn't exist
-            const currentReactions = msg.reactions || [];
-            
-            // Check if this reaction already exists (by same user with same emoji)
-            const existingReactionIndex = currentReactions.findIndex(
-              r => r.userId === reaction.userId && r.emoji === reaction.emoji
-            );
-            
-            // If it exists, replace it, otherwise add it
-            if (existingReactionIndex >= 0) {
-              const updatedReactions = [...currentReactions];
-              updatedReactions[existingReactionIndex] = reaction;
-              return { ...msg, reactions: updatedReactions };
-            } else {
-              return { ...msg, reactions: [...currentReactions, reaction] };
-            }
-          }
-          return msg;
-        });
-      });
-    };
-    
-    // Handle reaction removed from a message
-    const handleReactionRemoved = (reaction) => {
-      console.log("Reaction removed:", reaction);
-      setMessages(prevMessages => {
-        return prevMessages.map(msg => {
-          if (msg.id === reaction.messageId && msg.reactions) {
-            // Filter out the removed reaction
-            const updatedReactions = msg.reactions.filter(
-              r => !(r.userId === reaction.userId && r.emoji === reaction.emoji)
-            );
-            return { ...msg, reactions: updatedReactions };
-          }
-          return msg;
-        });
-      });
-    };
-    
-    socket.on('new-reaction', handleNewReaction);
-    socket.on('reaction-removed', handleReactionRemoved);
-    
-    return () => {
-      socket.off('new-reaction', handleNewReaction);
-      socket.off('reaction-removed', handleReactionRemoved);
-    };
-  }, [socket]);
-  
-  // Warning display code
+  }, [socket, friendId]); // Removed messages from deps — critical fix
+
+  // Connection warning with delay
   useEffect(() => {
     let warningTimer;
-    
-    // Only show warning if we're not in initial connecting phase
     if (!socketConnected && !initialConnecting) {
-      // Add delay before showing the warning to allow time for connection
-      warningTimer = setTimeout(() => {
-        setShowConnectionWarning(true);
-      }, 2000); // 2 second delay
+      warningTimer = setTimeout(() => setShowConnectionWarning(true), 2000);
     } else {
       setShowConnectionWarning(false);
-      
-      // If we connected for the first time, no longer in initial connecting phase
-      if (socketConnected) {
-        setInitialConnecting(false);
-      }
+      if (socketConnected) setInitialConnecting(false);
     }
-    
-    return () => {
-      if (warningTimer) clearTimeout(warningTimer);
-    };
+    return () => { if (warningTimer) clearTimeout(warningTimer); };
   }, [socketConnected, initialConnecting]);
 
-  // Add function to handle replying to a message
-  const handleReply = (message) => {
+  // Reply handlers
+  const handleReply = useCallback((message) => {
     setReplyingTo(message);
-    // Focus input field after setting reply
     setTimeout(() => {
       const inputField = document.querySelector('.message-form input');
       if (inputField) inputField.focus();
     }, 100);
-  };
+  }, []);
 
-  // Cancel reply
-  const cancelReply = () => {
+  const cancelReply = useCallback(() => {
     setReplyingTo(null);
-  };
+  }, []);
 
-  // Add function to handle adding a reaction
-  const handleReaction = (messageId) => {
-    setActiveReactionMessage(messageId === activeReactionMessage ? null : messageId);
-    setShowEmojiPicker(messageId === activeReactionMessage ? false : true);
-  };
+  // Reaction handlers
+  const handleReaction = useCallback((messageId) => {
+    setActiveReactionMessage(prev => prev === messageId ? null : messageId);
+    setShowEmojiPicker(prev => activeReactionMessage === messageId ? !prev : true);
+  }, [activeReactionMessage]);
 
-  // Add function to send a reaction
-  const sendReaction = async (messageId, emoji) => {
-    try {
-      const currentUser = getCurrentUser();
-      if (!currentUser || !currentUser.token) {
-        setError('You need to be logged in');
-        return;
-      }
-      
-      console.log('Reaction emoji object:', emoji);
-      
-      const reaction = {
-        messageId,
-        emoji: emoji.unified,
-        emojiName: emoji.names ? emoji.names[0] : emoji.name
-      };
-      
-      const response = await axios.post(`${API_URL}/messages/reactions`, reaction, {
-        headers: { Authorization: `Bearer ${currentUser.token}` }
-      });
-      
-      console.log('Reaction response:', response.data);
-      
-      // Hide emoji picker after selecting
-      setShowEmojiPicker(false);
-      setActiveReactionMessage(null);
-    } catch (err) {
-      console.error('Error adding reaction:', err);
-      setError('Failed to add reaction');
-    }
-  };
+  const handleSendReaction = useCallback(async (messageId, emoji) => {
+    await sendReaction(messageId, emoji);
+    setShowEmojiPicker(false);
+    setActiveReactionMessage(null);
+  }, [sendReaction]);
 
-  // Modify sendMessage to include reply information
-  const sendMessage = async (e) => {
+  const closeEmojiPicker = useCallback(() => {
+    setShowEmojiPicker(false);
+    setActiveReactionMessage(null);
+  }, []);
+
+  // Send message handler
+  const handleSendMessage = useCallback(async (e) => {
     e.preventDefault();
     if (!messageInput.trim()) return;
-    
-    const currentUser = getCurrentUser();
-    if (!currentUser || !currentUser.token) {
-      setError('You need to be logged in');
-      return;
-    }
-    
+
     if (!socketConnected) {
-      console.warn('Socket disconnected, message delivery may be delayed');
       setError('Connection issue. Message will be sent when connection is restored.');
       setTimeout(() => setError(''), 3000);
     }
-    
-    try {
-      let finalContent = messageInput;
-      if (vibeMetadata) {
-        finalContent += `|VIBE_META:${JSON.stringify(vibeMetadata)}`;
-      }
 
-      const newMessage = {
-        content: finalContent,
-        receiverId: friendId,
-        senderId: currentUser.id,
-        // Add replyToId if replying to a message
-        replyToId: replyingTo ? replyingTo.id : null
-      };
-      
-      await axios.post(`${API_URL}/messages`, newMessage, {
-        headers: { Authorization: `Bearer ${currentUser.token}` }
-      });
-      
-      // Clear input and reset reply state
+    const success = await sendMessage({
+      content: messageInput,
+      receiverId: friendId,
+      replyToId: replyingTo ? replyingTo.id : null,
+      vibeMetadata,
+    });
+
+    if (success) {
       setMessageInput('');
       setVibeMetadata(null);
       setReplyingTo(null);
-      
-      // Scroll to bottom after sending
-      setTimeout(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-      }, 300);
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setError('Failed to send message');
     }
-  };
+  }, [messageInput, friendId, replyingTo, vibeMetadata, socketConnected, sendMessage, setError]);
 
-  // New function to handle media upload success
-  const handleMediaUploadSuccess = async (mediaData) => {
-    try {
-      const currentUser = getCurrentUser();
-      if (!currentUser || !currentUser.token) {
-        setError('You need to be logged in');
-        return;
-      }
-      
-      const mediaMessage = {
-        mediaUrl: mediaData.url,
-        mediaType: mediaData.resourceType,
-        publicId: mediaData.publicId,
-        format: mediaData.format,
-        receiverId: friendId
-      };
-      
-      await axios.post(`${API_URL}/messages/media`, mediaMessage, {
-        headers: { Authorization: `Bearer ${currentUser.token}` }
-      });
-      
-      // Hide media upload component after successful upload
-      setShowMediaUpload(false);
-      
-      // Scroll to bottom after sending
-      setTimeout(() => {
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-      }, 300);
-    } catch (err) {
-      console.error('Error sending media message:', err);
-      setError('Failed to send media');
-    }
-  };
+  // Media upload handler
+  const handleMediaUploadSuccess = useCallback(async (mediaData) => {
+    const success = await sendMediaMessage(mediaData);
+    if (success) setShowMediaUpload(false);
+  }, [sendMediaMessage]);
 
-  // Modified message rendering to include media display
-  const renderMessage = (message) => {
-    const isCurrentUser = message.senderId === getCurrentUser()?.id;
-  
-    // Check for missing media properties
-    if (message.mediaUrl === undefined && message.hasMedia) {
-      console.error('Message marked as having media but URL is missing:', message);
-    }
-    
-    // Find the message being replied to if applicable
-    const replyToMessage = message.replyToId 
-      ? messages.find(m => m.id === message.replyToId) 
-      : null;
-    
-    return (
-      <div
-        key={message.id}
-        className={`message ${isCurrentUser ? 'sent' : 'received'}`}
-        data-message-id={message.id}
-      >
-        <div className="message-bubble">
-          {/* Show reply context if this message is a reply */}
-          {message.replyToId && (
-            <div
-              className="reply-context"
-              onClick={() => scrollToMessage(message.replyToId)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="reply-indicator">↩️ Reply to:</div>
-              <div className="reply-content">
-                {replyToMessage
-                  ? (replyToMessage.content
-                      ? replyToMessage.content.substring(0, 50) + (replyToMessage.content.length > 50 ? '...' : '')
-                      : replyToMessage.mediaUrl
-                        ? '[Media]'
-                        : '[Message]')
-                  : '[Original message not loaded]'}
-              </div>
-            </div>
-          )}
-
-          {/* Show message content if any */}
-          {message.content && (
-            <div className="message-content">
-              {(() => {
-                const parts = message.content.split('|VIBE_META:');
-                const textPart = parts[0];
-                let metaPart = null;
-                if (parts.length > 1) {
-                  try {
-                    metaPart = JSON.parse(parts[1]);
-                  } catch(e) {}
-                }
-                return (
-                  <>
-                    {textPart}
-                    {metaPart && <VibeTypeCard metadata={metaPart} />}
-                  </>
-                );
-              })()}
-            </div>
-          )}
-
-          {/* Show media content */}
-          {(message.mediaUrl || (message.hasMedia && !message.mediaUrl)) && (
-            <MediaDisplay
-              media={{
-                url: message.mediaUrl || '',
-                resourceType: message.mediaType || 'image',
-                publicId: message.mediaPublicId || '',
-                format: message.mediaFormat || '',
-                messageId: message.id,
-                timestamp: message.mediaTimestamp || new Date().getTime()
-              }}
-            />
-          )}
-
-          {/* Timestamp */}
-          <div className="message-time">
-            {new Date(message.createdAt).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </div>
-        </div>
-
-        {/* Show reactions below bubble */}
-        {message.reactions && message.reactions.length > 0 && (
-          <div className="message-reactions">
-            {message.reactions.map((reaction, index) => (
-              <span key={index} className="reaction" title={reaction.username}>
-                {(() => {
-                  try {
-                    if (reaction.emoji.includes('-') || reaction.emoji.length > 6) {
-                      return String.fromCodePoint(...reaction.emoji.split('-').map(code => parseInt(code, 16)));
-                    } else {
-                      return String.fromCodePoint(parseInt(reaction.emoji, 16));
-                    }
-                  } catch (e) {
-                    console.error('Error rendering emoji', reaction.emoji, e);
-                    return '😊';
-                  }
-                })()}
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Message actions (reply, react) */}
-        <div className="message-actions">
-          <button
-            className="action-button reply-button"
-            onClick={() => handleReply(message)}
-            title="Reply"
-          >
-            ↩️
-          </button>
-          <button
-            className="action-button react-button"
-            onClick={() => handleReaction(message.id)}
-            title="React"
-          >
-            😊
-          </button>
-
-          {/* Show emoji picker for this message */}
-          {showEmojiPicker && activeReactionMessage === message.id && (
-            <div className={`emoji-picker-container ${isCurrentUser ? 'emoji-picker-sent' : 'emoji-picker-received'}`}>
-              <div className="emoji-picker-close" onClick={() => {
-                setShowEmojiPicker(false);
-                setActiveReactionMessage(null);
-              }}>✕</div>
-              <EmojiPicker
-                onEmojiClick={(emojiObj) => sendReaction(message.id, emojiObj)}
-                disableAutoFocus={true}
-                native={true}
-                searchPlaceholder="Search emoji..."
-                previewConfig={{ showPreview: false }}
-                width="min(100vw - 20px, 280px)"
-                height="320px"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  // Add function to start video call
-  const startVideoCall = () => {
-    console.log('Video call button clicked');
-    console.log('Socket connected:', socketConnected);
-    
-    if (!socketConnected) {
-      setError('Not connected to server. Please wait and try again.');
-      return;
-    }
-    
-    // Make the callId more stable and consistent
-    const callId = `call_${friendId}_${getCurrentUser().id}`;
-    console.log('Generated call ID:', callId);
-    
-    // Ensure socket is connected before sending invitation
-    if (socket && socketConnected) {
-      const currentUser = getCurrentUser();
-      
-      console.log('Sending video call invitation:', {
-        callId,
-        fromUserId: currentUser.id,
-        toUserId: parseInt(friendId),
-        fromUsername: currentUser.username
-      });
-      
-      socket.emit('video-call-invitation', {
-        callId,
-        fromUserId: currentUser.id,
-        toUserId: parseInt(friendId),
-        fromUsername: currentUser.username
-      });
-      
-      console.log('🎭 ROLE ASSIGNMENT: User is INITIATOR of the call');
-      
-      // Navigate with clear initiator flag using React Router's state
-      navigate(`/videocall/${callId}`, { 
-        replace: true,
-        state: {
-          isInitiator: true,
-          fromUserId: currentUser.id,
-          toUserId: parseInt(friendId)
-        }
-      });
-    } else {
-      setError('Connection not available. Please wait and try again.');
-      console.error('Socket not connected for video call');
-    }
-  };
-
-  // Listen for video call invitations
-  useEffect(() => {
-    if (!socket) return;
-    
-    const handleVideoCallInvitation = (data) => {
-      const { callId, fromUserId, fromUsername } = data;
-      
-      // Show confirmation dialog
-      const shouldJoin = window.confirm(
-        `${fromUsername} is inviting you to a video call. Do you want to join?`
-      );
-      
-      if (shouldJoin) {
-        // Make sure we use the exact same callId that was sent
-        console.log(`Accepting call with ID: ${callId}`);
-        
-        // Use replace to prevent navigation stack issues
-        navigate(`/videocall/${callId}`, { 
-          replace: true,
-          state: {
-            isInitiator: false, // Explicitly set to false for the receiver
-            fromUserId: fromUserId,
-            toUserId: getCurrentUser().id
-          }
-        });
-      }
-    };
-    
-    socket.on('video-call-invitation', handleVideoCallInvitation);
-    
-    return () => {
-      socket.off('video-call-invitation', handleVideoCallInvitation);
-    };
-  }, [socket, navigate]);
-
-  // Function to scroll to a specific message by ID
-  const scrollToMessage = (messageId) => {
-    // Find the message element by ID
+  // Scroll to message (for reply context clicks)
+  const scrollToMessage = useCallback((messageId) => {
     const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
-    
     if (!messageElement) {
-      console.log(`Message with ID ${messageId} not found in current view. It might need to be loaded.`);
       setError('Message not found in current view. Try loading more messages.');
       setTimeout(() => setError(''), 3000);
       return;
     }
-    
-    // Apply a highlight effect to the target message
-    messageElement.classList.add('highlight-message');
-    
-    // Scroll to the message with a small offset from the top
-    const container = messagesContainerRef.current;
-    const messageTop = messageElement.offsetTop;
-    
-    // Smooth scroll to the message position
-    container.scrollTo({
-      top: messageTop - 100, // 100px offset from top for better visibility
-      behavior: 'smooth'
-    });
-    
-    // Remove highlight after a delay
-    setTimeout(() => {
-      messageElement.classList.remove('highlight-message');
-    }, 2000);
-  };
 
-  // Add new effect to handle mobile layout optimization
+    messageElement.classList.add('highlight-message');
+    const container = messagesContainerRef.current;
+    container.scrollTo({
+      top: messageElement.offsetTop - 100,
+      behavior: 'smooth',
+    });
+
+    setTimeout(() => messageElement.classList.remove('highlight-message'), 2000);
+  }, [setError]);
+
+  // Video call
+  const startVideoCall = useCallback(() => {
+    if (!socketConnected) {
+      setError('Not connected to server. Please wait and try again.');
+      return;
+    }
+    const currentUser = getCurrentUser();
+    if (!socket || !currentUser) return;
+
+    const callId = `call_${friendId}_${currentUser.id}`;
+
+    socket.emit('video-call-invitation', {
+      callId,
+      fromUserId: currentUser.id,
+      toUserId: parseInt(friendId),
+      fromUsername: currentUser.username,
+    });
+
+    navigate(`/videocall/${callId}`, {
+      replace: true,
+      state: {
+        isInitiator: true,
+        fromUserId: currentUser.id,
+        toUserId: parseInt(friendId),
+      },
+    });
+  }, [socket, socketConnected, friendId, navigate, setError]);
+
+  // Video call invitation listener
   useEffect(() => {
-    // Hide navbar when on chat page
+    if (!socket) return;
+
+    const handleVideoCallInvitation = (data) => {
+      const { callId, fromUserId, fromUsername } = data;
+      const shouldJoin = window.confirm(
+        `${fromUsername} is inviting you to a video call. Do you want to join?`
+      );
+
+      if (shouldJoin) {
+        navigate(`/videocall/${callId}`, {
+          replace: true,
+          state: {
+            isInitiator: false,
+            fromUserId,
+            toUserId: getCurrentUser().id,
+          },
+        });
+      }
+    };
+
+    socket.on('video-call-invitation', handleVideoCallInvitation);
+    return () => socket.off('video-call-invitation', handleVideoCallInvitation);
+  }, [socket, navigate]);
+
+  // Mobile layout optimization
+  useEffect(() => {
     document.body.classList.add('chat-page-active');
-    
-    // Add viewport height fix for mobile
     const setViewportHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
-    
-    // Set initial viewport height
     setViewportHeight();
-    
-    // Update on resize
     window.addEventListener('resize', setViewportHeight);
-    
-    // Cleanup when component unmounts
     return () => {
       document.body.classList.remove('chat-page-active');
       window.removeEventListener('resize', setViewportHeight);
     };
   }, []);
 
-  const friendName = friendInfo
-    ? (friendInfo.username || (friendInfo.user && friendInfo.user.username) || 'Friend')
-    : 'Loading...';
+  // Input change with typing indicator
+  const handleInputChange = useCallback((e) => {
+    setMessageInput(e.target.value);
+    if (e.target.value.trim()) {
+      emitTyping();
+    }
+  }, [emitTyping]);
 
-  const friendInitial = friendName && friendName !== 'Loading...' ? friendName.charAt(0).toUpperCase() : '?';
+  // Memoize friend display info
+  const friendName = useMemo(() => {
+    return friendInfo
+      ? (friendInfo.username || (friendInfo.user && friendInfo.user.username) || 'Friend')
+      : 'Loading...';
+  }, [friendInfo]);
+
+  const friendInitial = useMemo(() => {
+    return friendName && friendName !== 'Loading...' ? friendName.charAt(0).toUpperCase() : '?';
+  }, [friendName]);
+
+  // Memoize messages lookup for reply context
+  const messagesById = useMemo(() => {
+    const map = {};
+    messages.forEach(m => { map[m.id] = m; });
+    return map;
+  }, [messages]);
+
+  const currentUserId = useMemo(() => getCurrentUser()?.id, []);
+
+  // Get real presence
+  const friendPresence = getPresence(friendId);
+  const isFriendOnline = friendPresence.status === 'online';
 
   return (
     <div className="chat-container chat-fullscreen">
@@ -862,101 +438,122 @@ function Chat() {
           </button>
           <div className="chat-friend-avatar">
             {friendInitial}
-            {socketConnected && <div className="chat-friend-online-dot" />}
+            {isFriendOnline && <div className="chat-friend-online-dot" />}
           </div>
           <div className="chat-header-info">
             <p className="chat-header-name">{friendName}</p>
-            {socketConnected && <div className="chat-header-status">Online</div>}
+            {friendTyping ? (
+              <div className="chat-header-status typing">
+                typing...
+              </div>
+            ) : isFriendOnline ? (
+              <div className="chat-header-status">Online</div>
+            ) : (
+              <div className="chat-header-status offline">
+                {formatLastSeen(friendPresence.lastSeen)}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="chat-actions">
-          <button
-            onClick={() => navigate(`/games/${friendId}`)}
-            className="games-btn"
-          >
+          <button onClick={() => navigate(`/games/${friendId}`)} className="games-btn">
             🎮 <span>Games</span>
           </button>
-          <button
-            onClick={startVideoCall}
-            className="video-call-btn"
-          >
+          <button onClick={startVideoCall} className="video-call-btn">
             📹 <span>Video Call</span>
           </button>
         </div>
       </div>
-      
+
       {error && <div className="error-message">{error}</div>}
-      
+
       {showConnectionWarning && !socketConnected && (
         <div className="connection-warning">
           ⚠️ Connection lost. Messages may not be delivered immediately.
         </div>
       )}
-      
-      <div 
-        className="messages-container" 
-        ref={messagesContainerRef}
-        style={{ pointerEvents: isScrollLocked ? 'none' : 'auto' }}
-      >
+
+      <div className="messages-container" ref={messagesContainerRef}>
         {loadingMore && (
           <div className="loading-more-messages">
             <div className="spinner" />
             Loading older messages...
           </div>
         )}
-        
+
         {!hasMore && messages.length > 0 && (
           <div className="no-more-messages">Beginning of conversation</div>
         )}
-        
-        {loading && !loadingMore ? (
-          <div className="loading-messages">Loading messages...</div>
+
+        {loading ? (
+          <MessageSkeleton />
         ) : messages.length === 0 ? (
           <div className="no-messages">
             <span className="no-messages-icon">💬</span>
             <p>No messages yet.<br />Send your first message to start chatting! 💕</p>
           </div>
         ) : (
-          messages.map(renderMessage)
+          messages.map((message) => (
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isCurrentUser={message.senderId === currentUserId}
+              replyToMessage={message.replyToId ? messagesById[message.replyToId] : null}
+              onReply={handleReply}
+              onReact={handleReaction}
+              onSendReaction={handleSendReaction}
+              onScrollToMessage={scrollToMessage}
+              showEmojiPicker={showEmojiPicker}
+              activeReactionMessage={activeReactionMessage}
+              onCloseEmojiPicker={closeEmojiPicker}
+            />
+          ))
         )}
+
+        {/* Typing indicator */}
+        {friendTyping && <TypingIndicator username={friendName} />}
+
+        <div ref={messagesEndRef} />
       </div>
-      
-      {/* Media upload component */}
+
+      {/* New messages indicator */}
+      <NewMessagesIndicator
+        count={unreadCount}
+        onClick={() => scrollToBottom(true)}
+      />
+
+      {/* Media upload */}
       {showMediaUpload && (
-        <MediaUpload 
+        <MediaUpload
           onUploadSuccess={handleMediaUploadSuccess}
           onCancel={() => setShowMediaUpload(false)}
         />
       )}
-      
-      {/* Show reply preview if replying to a message */}
+
+      {/* Reply preview */}
       {replyingTo && (
         <div className="reply-preview">
           <div className="reply-preview-content">
             <span className="reply-to-label">Reply to: </span>
             <span className="reply-text">
-              {replyingTo.content 
+              {replyingTo.content
                 ? replyingTo.content.substring(0, 30) + (replyingTo.content.length > 30 ? '...' : '')
                 : '[Media]'
               }
             </span>
           </div>
-          <button 
-            className="cancel-reply" 
-            onClick={cancelReply}
-            title="Cancel reply"
-          >
+          <button className="cancel-reply" onClick={cancelReply} title="Cancel reply">
             ✕
           </button>
         </div>
       )}
-      
-      {/* Message form with improved mobile support */}
-      <form className="message-form" onSubmit={sendMessage}>
-        <VibeTypeButton onClick={launchVibeType} disabled={loading || isScrollLocked} />
-        <button 
-          type="button" 
+
+      {/* Message form */}
+      <form className="message-form" onSubmit={handleSendMessage}>
+        <VibeTypeButton onClick={launchVibeType} disabled={loading} />
+        <button
+          type="button"
           className="media-button"
           onClick={() => setShowMediaUpload(!showMediaUpload)}
         >
@@ -965,11 +562,11 @@ function Chat() {
         <input
           type="text"
           value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
+          onChange={handleInputChange}
           placeholder={replyingTo ? "Type your reply..." : "Type a message..."}
-          disabled={loading || isScrollLocked}
+          disabled={loading}
         />
-        <button type="submit" disabled={!messageInput.trim() || loading || isScrollLocked} title="Send message">
+        <button type="submit" disabled={!messageInput.trim() || loading} title="Send message">
           ➤
         </button>
       </form>

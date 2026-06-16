@@ -70,6 +70,7 @@
   --bubble-received-bg: #F1F3F8;
   --bubble-received-text: #1C1B22;
   --online-dot: #57F287;
+  --read-receipt-color: #38bdf8;
 
   /* Buttons */
   --btn-primary-bg: linear-gradient(135deg, var(--primary), var(--primary-hover));
@@ -167,6 +168,7 @@
   --bubble-received-bg: #1B2135;
   --bubble-received-text: #E2E8F0;
   --online-dot: #57F287;
+  --read-receipt-color: #300066;
 
   /* Buttons */
   --btn-primary-bg: linear-gradient(135deg, #72D3DC, #6AA8FF);

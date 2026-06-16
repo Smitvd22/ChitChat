@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import axios from 'axios';
 import { getCurrentUser } from '../services/authService';
+import { usePresenceContext } from '../contexts/PresenceContext';
 import '../styles/Friends.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,6 +13,7 @@ function Friends() {
   const [error, setError] = useState('');
   const [friendRequests, setFriendRequests] = useState([]);
   const navigate = useNavigate();
+  const { getPresence, formatLastSeen, requestBulkPresence } = usePresenceContext();
 
   const API_URL = process.env.REACT_APP_API_URL ||
     (process.env.NODE_ENV === 'production'
@@ -83,6 +85,24 @@ function Friends() {
     fetchFriends();
     fetchFriendRequests();
   }, [fetchFriends, fetchFriendRequests]);
+
+  // Request bulk presence when friends are loaded
+  useEffect(() => {
+    if (friends.length > 0) {
+      requestBulkPresence(friends.map(f => f.id));
+    }
+  }, [friends, requestBulkPresence]);
+
+  // Sort friends: online first, then by username
+  const sortedFriends = useMemo(() => {
+    return [...friends].sort((a, b) => {
+      const aOnline = getPresence(a.id).status === 'online';
+      const bOnline = getPresence(b.id).status === 'online';
+      if (aOnline && !bOnline) return -1;
+      if (!aOnline && bOnline) return 1;
+      return (a.username || '').localeCompare(b.username || '');
+    });
+  }, [friends, getPresence]);
 
   const searchUsers = async () => {
     if (!searchTerm) return;
@@ -287,15 +307,20 @@ function Friends() {
         {loading ? (
           <div className="loading">Loading friends...</div>
         ) : friends.length > 0 ? (
-          friends.map(friend => (
+          sortedFriends.map(friend => {
+            const presence = getPresence(friend.id);
+            const isOnline = presence.status === 'online';
+            return (
             <div className="friend-card" key={friend.id}>
               <div className="card-avatar">
                 {getInitial(friend.username)}
-                <div className="online-dot" />
+                {isOnline && <div className="online-dot" />}
               </div>
               <div className="friend-info">
                 <h3>{friend.username}</h3>
-                <p>{friend.email}</p>
+                <p className={`friend-status ${isOnline ? 'status-online' : 'status-offline'}`}>
+                  {isOnline ? '● Online' : formatLastSeen(presence.lastSeen)}
+                </p>
               </div>
               <div className="friend-actions">
                 <button onClick={() => startChat(friend.id)} className="chat-btn">
@@ -306,7 +331,8 @@ function Friends() {
                 </button>
               </div>
             </div>
-          ))
+            );
+          })
         ) : (
           <div className="empty-state">
             <span className="empty-state-icon">💌</span>

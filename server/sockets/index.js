@@ -1,5 +1,14 @@
 import { Server } from 'socket.io';
 import { setupGameSocket } from './gameSocket.js';
+import {
+  initPresence,
+  registerSocket,
+  unregisterSocket,
+  heartbeat as presenceHeartbeat,
+  goingOffline,
+  getStatus,
+  getBulkStatus,
+} from './presenceManager.js';
 
 /**
  * Sets up Socket.IO with all messaging and calling functionality
@@ -38,6 +47,9 @@ export const setupSocketIO = (io) => {
       const userId = roomId.replace('user-', '');
       socket.userId = userId;
       console.log(`Socket ${socket.id} joined room: ${roomId}, userId: ${userId}`);
+
+      // Register with presence manager
+      registerSocket(userId, socket.id);
     });
 
     // ====== MESSAGING FUNCTIONALITY ======
@@ -49,11 +61,53 @@ export const setupSocketIO = (io) => {
       console.log(`Message sent in room ${chatRoom}`);
     });
 
+    // ====== TYPING INDICATORS ======
+
+    // Relay typing-start to chat room
+    socket.on('typing-start', (data) => {
+      const { roomId, userId, username } = data;
+      socket.to(roomId).emit('typing-start', { userId, username });
+    });
+
+    // Relay typing-stop to chat room
+    socket.on('typing-stop', (data) => {
+      const { roomId, userId } = data;
+      socket.to(roomId).emit('typing-stop', { userId });
+    });
+
     // ====== USER PRESENCE ======
 
-    // Handle user online status (optional enhancement)
+    // Handle heartbeat from client (keeps presence alive)
+    socket.on('heartbeat', () => {
+      if (socket.userId) {
+        presenceHeartbeat(socket.userId);
+      }
+    });
+
+    // Handle explicit going-offline signal (beforeunload / visibility hidden)
+    socket.on('going-offline', () => {
+      if (socket.userId) {
+        goingOffline(socket.userId, socket.id);
+      }
+    });
+
+    // Handle bulk presence query
+    socket.on('get-presence', async (data, callback) => {
+      if (data && data.userIds && typeof callback === 'function') {
+        const statuses = await getBulkStatus(data.userIds);
+        callback(statuses);
+      }
+    });
+
+    // Handle single user presence query
+    socket.on('get-user-presence', async (data, callback) => {
+      if (data && data.userId && typeof callback === 'function') {
+        callback(await getStatus(data.userId));
+      }
+    });
+
+    // Legacy: set-status handler (kept for backward compatibility)
     socket.on('set-status', (status) => {
-      // Store user status if needed
       socket.broadcast.emit('user-status-change', {
         userId: socket.userId,
         status: status
@@ -219,6 +273,11 @@ export const setupSocketIO = (io) => {
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
 
+      // Unregister from presence manager
+      if (socket.userId) {
+        unregisterSocket(socket.userId, socket.id);
+      }
+
       // If user was in a video call, notify others
       if (socket.currentCallId && socket.peerId) {
         socket.to(socket.currentCallId).emit('user-left-video-call', socket.peerId);
@@ -274,6 +333,9 @@ export const initializeSocketIO = (server, app) => {
 
   // Store io instance in app for use in other parts of the application
   app.set('io', io);
+
+  // Initialize presence manager
+  initPresence(io);
 
   // Setup socket handlers
   setupSocketIO(io);

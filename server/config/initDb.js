@@ -14,7 +14,8 @@ export const initializeDatabase = async () => {
         email VARCHAR(100) UNIQUE NOT NULL,
         mobile VARCHAR(20),
         password VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
+        created_at TIMESTAMP DEFAULT NOW(),
+        last_seen TIMESTAMP DEFAULT NOW()
       )
     `);
 
@@ -69,6 +70,7 @@ export const initializeDatabase = async () => {
     `);
 
     console.log('Database tables initialized successfully');
+    await addMissingColumns();
     isInitialized = true;
   } catch (error) {
     console.error('Error initializing database:', error);
@@ -78,8 +80,6 @@ export const initializeDatabase = async () => {
 
 // Function to check and add missing columns to existing tables
 export const addMissingColumns = async () => {
-  if (isInitialized) return;
-  
   try {
     // Check and add missing columns to users table
     const userColumns = await pool.query(`
@@ -93,6 +93,11 @@ export const addMissingColumns = async () => {
     if (!existingUserColumns.includes('mobile')) {
       await pool.query(`ALTER TABLE users ADD COLUMN mobile VARCHAR(20)`);
       console.log('Added mobile column to users table');
+    }
+
+    if (!existingUserColumns.includes('last_seen')) {
+      await pool.query(`ALTER TABLE users ADD COLUMN last_seen TIMESTAMP DEFAULT NOW()`);
+      console.log('Added last_seen column to users table');
     }
 
     // Check and add missing columns to friendships table

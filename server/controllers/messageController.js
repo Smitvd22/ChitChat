@@ -66,6 +66,7 @@ export const getChatHistory = async (req, res) => {
       mediaPublicId: msg.media_public_id, 
       mediaFormat: msg.media_format,
       createdAt: msg.created_at,
+      read: msg.read,
       reactions: reactionsByMessageId[msg.id] || []
     }));
     
@@ -105,7 +106,8 @@ export const sendMessage = async (req, res) => {
       mediaType: result.rows[0].media_type,
       mediaPublicId: result.rows[0].media_public_id,
       mediaFormat: result.rows[0].media_format,
-      createdAt: result.rows[0].created_at
+      createdAt: result.rows[0].created_at,
+      read: result.rows[0].read
     };
     
     // Emit to socket
@@ -146,7 +148,8 @@ export const sendMediaMessage = async (req, res) => {
       mediaType: result.rows[0].media_type,
       mediaPublicId: result.rows[0].media_public_id,
       mediaFormat: result.rows[0].media_format,
-      createdAt: result.rows[0].created_at
+      createdAt: result.rows[0].created_at,
+      read: result.rows[0].read
     };
     
     // Emit to socket
@@ -158,6 +161,39 @@ export const sendMediaMessage = async (req, res) => {
   } catch (error) {
     console.error('Send media message error:', error);
     res.status(500).json({ error: 'Failed to send media message' });
+  }
+};
+
+// Mark messages as read
+export const markMessagesAsRead = async (req, res) => {
+  const { friendId } = req.params;
+  const userId = req.user.userId;
+  
+  try {
+    // Update messages where friend sent them to me, and they are not read yet
+    const result = await pool.query(
+      `UPDATE messages 
+       SET read = true 
+       WHERE sender_id = $1 AND receiver_id = $2 AND read = false
+       RETURNING id`,
+      [friendId, userId]
+    );
+    
+    // If any messages were updated, notify the sender via socket
+    if (result.rowCount > 0) {
+      const io = req.app.get('io');
+      const chatRoom = [userId, friendId].sort().join('-');
+      // Tell the room that messages from friendId are now read
+      io.to(chatRoom).emit('messages-read', {
+        readerId: userId,
+        senderId: friendId
+      });
+    }
+    
+    res.status(200).json({ success: true, updatedCount: result.rowCount });
+  } catch (error) {
+    console.error('Mark messages as read error:', error);
+    res.status(500).json({ error: 'Failed to mark messages as read' });
   }
 };
 

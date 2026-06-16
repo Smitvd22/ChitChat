@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../../../services/authService';
 import { useGameSocket } from '../../hooks/useGameSocket';
 import GameLayout from '../../components/GameLayout';
+import SplitLayout from '../../../../components/layout/SplitLayout';
 import MemoryCardsBoard from './MemoryCardsBoard';
 import '../../styles/Games.css';
 
@@ -64,80 +65,82 @@ const MemoryCardsPage = () => {
   }
 
   return (
-    <div className="game-page-container">
-      <GameLayout
-        players={gameState?.players || []}
-        currentTurn={gameState?.currentTurn}
-        currentPlayerId={String(currentUser.id)}
-        status={gameState?.status || 'waiting'}
-        winner={gameState?.winner}
-        onLeave={handleLeave}
-        gameName="Memory Cards"
-      >
-        {/* Connection / Error banners */}
-        {!connected && (
-          <div className="game-banner game-banner-warning">
-            ⚠️ Reconnecting...
-          </div>
-        )}
-        {error && (
-          <div className="game-banner game-banner-error">
-            {error}
-          </div>
-        )}
-        {opponentDisconnected && (
-          <div className="game-banner game-banner-warning">
-            ⏳ Opponent disconnected. Waiting for reconnect...
-          </div>
-        )}
+    <SplitLayout friendId={friendId}>
+      <div className="game-page-container">
+        <GameLayout
+          players={gameState?.players || []}
+          currentTurn={gameState?.currentTurn}
+          currentPlayerId={String(currentUser.id)}
+          status={gameState?.status || 'waiting'}
+          winner={gameState?.winner}
+          onLeave={handleLeave}
+          gameName="Memory Cards"
+        >
+          {/* Connection / Error banners */}
+          {!connected && (
+            <div className="game-banner game-banner-warning">
+              ⚠️ Reconnecting...
+            </div>
+          )}
+          {error && (
+            <div className="game-banner game-banner-error">
+              {error}
+            </div>
+          )}
+          {opponentDisconnected && (
+            <div className="game-banner game-banner-warning">
+              ⏳ Opponent disconnected. Waiting for reconnect...
+            </div>
+          )}
 
-        {/* Waiting state */}
-        {(!gameState || gameState.status === 'waiting') && (
-          <div className="game-waiting-state">
-            <div className="game-waiting-spinner" />
-            <p>Waiting for your friend to join...</p>
-            <p className="game-waiting-hint">Share this game from the chat!</p>
-          </div>
-        )}
+          {/* Waiting state */}
+          {(!gameState || gameState.status === 'waiting') && (
+            <div className="game-waiting-state">
+              <div className="game-waiting-spinner" />
+              <p>Waiting for your friend to join...</p>
+              <p className="game-waiting-hint">Share this game from the chat!</p>
+            </div>
+          )}
 
-        {/* Game board */}
-        {gameState && gameState.status !== 'waiting' && (
-          <>
-            <MemoryCardsBoard
-              gameState={gameState}
-              myPlayerIndex={myPlayerIndex}
-              onCardClick={handleCardClick}
-            />
+          {/* Game board */}
+          {gameState && gameState.status !== 'waiting' && (
+            <>
+              <MemoryCardsBoard
+                gameState={gameState}
+                myPlayerIndex={myPlayerIndex}
+                onCardClick={handleCardClick}
+              />
 
-            {/* Game over actions */}
-            {gameState.status === 'finished' && (
-              <div className="game-over-actions">
-                {rematchPending ? (
-                  <div className="game-rematch-pending">
-                    <div className="game-waiting-spinner small" />
-                    <span>Waiting for opponent...</span>
-                  </div>
-                ) : rematchRequested ? (
-                  <div className="game-rematch-request">
-                    <p>Opponent wants a rematch!</p>
+              {/* Game over actions */}
+              {gameState.status === 'finished' && (
+                <div className="game-over-actions">
+                  {rematchPending ? (
+                    <div className="game-rematch-pending">
+                      <div className="game-waiting-spinner small" />
+                      <span>Waiting for opponent...</span>
+                    </div>
+                  ) : rematchRequested ? (
+                    <div className="game-rematch-request">
+                      <p>Opponent wants a rematch!</p>
+                      <button className="game-rematch-btn" onClick={handleRematch}>
+                        🔄 Accept Rematch
+                      </button>
+                    </div>
+                  ) : (
                     <button className="game-rematch-btn" onClick={handleRematch}>
-                      🔄 Accept Rematch
+                      🔄 Rematch
                     </button>
-                  </div>
-                ) : (
-                  <button className="game-rematch-btn" onClick={handleRematch}>
-                    🔄 Rematch
+                  )}
+                  <button className="game-leave-action-btn" onClick={handleLeave}>
+                    🚪 Leave Game
                   </button>
-                )}
-                <button className="game-leave-action-btn" onClick={handleLeave}>
-                  🚪 Leave Game
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </GameLayout>
-    </div>
+                </div>
+              )}
+            </>
+          )}
+        </GameLayout>
+      </div>
+    </SplitLayout>
   );
 };
 

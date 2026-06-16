@@ -8,6 +8,7 @@ import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import { getCurrentUser } from './services/authService';
 import { CallProvider } from './contexts/CallContext';
+import { PresenceProvider } from './contexts/PresenceContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './App.css';
 import './styles/LoveTheme.css';
@@ -33,6 +34,7 @@ function App() {
         }}
       >
         <CallProvider>
+          <PresenceProvider>
           <div className="App">
             <div className="floating-hearts">
               {[...Array(15)].map((_, i) => (
@@ -134,6 +136,7 @@ function App() {
               <Route path="*" element={isAuthenticated() ? <Navigate to="/friends" /> : <Navigate to="/login" />} />
             </Routes>
           </div>
+          </PresenceProvider>
         </CallProvider>
       </Router>
     </ThemeProvider>

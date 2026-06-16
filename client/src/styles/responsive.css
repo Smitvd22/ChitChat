@@ -187,48 +187,6 @@ a, button, .nav-item, .dropdown-item, input,
   }
 }
 
-/* Chat improvements */
-.chat-container {
-  height: calc(100vh - clamp(60px, 10vw, 70px) - 20px);
-  margin: clamp(60px, 10vw, 80px) auto 0;
-  max-width: 100%;
-  width: clamp(300px, 100%, 800px);
-}
-
-.messages-container {
-  padding: clamp(10px, 3vw, 15px);
-}
-
-.message {
-  max-width: clamp(60%, 70%, 85%);
-  padding: clamp(8px, 2vw, 15px);
-  margin-bottom: clamp(8px, 2vw, 10px);
-  border-radius: clamp(14px, 4vw, 18px);
-}
-
-/* Additional mobile optimizations for chat */
-@media (max-width: 768px) {
-  .chat-container {
-    border-radius: 0;
-    width: 100%;
-    top: clamp(50px, 10vw, 70px); /* Ensure it starts right below navbar */
-    height: calc(100vh - clamp(50px, 10vw, 70px));
-  }
-  
-  .messages-container {
-    padding: clamp(8px, 2vw, 15px);
-    max-height: calc(100vh - clamp(50px, 10vw, 70px) - 100px);
-  }
-  
-  .chat-header {
-    padding: 10px;
-    height: auto;
-  }
-  
-  .message-form {
-    padding: 8px;
-  }
-}
 
 /* Birthday cards improvements */
 .birthday-timeline {
@@ -281,19 +239,7 @@ a, button, .nav-item, .dropdown-item, input,
     width: clamp(80px, 25vw, 120px);
     height: clamp(80px, 25vw, 120px);
   }
-  
-  .message-form {
-    padding: 10px;
-  }
-  
-  .message-form input {
-    padding: 8px 12px;
-    font-size: 0.95rem;
-  }
-  
-  .message-form button {
-    padding: 8px 16px;
-  }
+
 }
 
 /* Medium screens */
