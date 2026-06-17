@@ -12,6 +12,7 @@ import * as dotsboxes from '../games/dotsboxes.js';
 import * as memorycards from '../games/memorycards.js';
 import * as numberduel from '../games/numberduel.js';
 import * as quoridor from '../games/quoridor.js';
+import * as seabattle from '../games/seabattle.js';
 
 // In-memory store of active game sessions
 // Key: `${roomId}:${gameId}`, Value: game state
@@ -25,6 +26,7 @@ const gameRegistry = {
   'memory-cards': memorycards,
   'number-duel': numberduel,
   'quoridor': quoridor,
+  'seabattle': seabattle,
 };
 
 /**
@@ -38,11 +40,25 @@ function sessionKey(roomId, gameId) {
  * Broadcast game state to all players in the room
  */
 function broadcastGameState(io, roomId, gameId, state) {
-  io.to(`game:${roomId}:${gameId}`).emit('game:state', {
-    roomId,
-    gameId,
-    state,
-  });
+  const gameMod = gameRegistry[gameId];
+  const roomName = `game:${roomId}:${gameId}`;
+  
+  if (gameMod && typeof gameMod.filterState === 'function') {
+    // Send customized state to each player in the room
+    const room = io.sockets.adapter.rooms.get(roomName);
+    if (room) {
+      for (const socketId of room) {
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket) {
+          const playerId = socket.currentGame?.playerId;
+          const filteredState = gameMod.filterState(state, playerId);
+          socket.emit('game:state', { roomId, gameId, state: filteredState });
+        }
+      }
+    }
+  } else {
+    io.to(roomName).emit('game:state', { roomId, gameId, state });
+  }
 }
 
 /**
@@ -89,7 +105,7 @@ export function setupGameSocket(io) {
             // Add second player
             session.players.push(player);
             if (session.players.length === 2) {
-              if (gameId === 'number-duel') {
+              if (gameId === 'number-duel' || gameId === 'seabattle') {
                 session.status = 'setup';
               } else {
                 session.status = 'playing';
@@ -168,7 +184,11 @@ export function setupGameSocket(io) {
         const session = gameSessions.get(key);
 
         if (session) {
-          socket.emit('game:state', { roomId, gameId, state: session });
+          const gameMod = gameRegistry[gameId];
+          const filteredState = gameMod && typeof gameMod.filterState === 'function' 
+            ? gameMod.filterState(session, socket.currentGame?.playerId) 
+            : session;
+          socket.emit('game:state', { roomId, gameId, state: filteredState });
         } else {
           socket.emit('game:state', { roomId, gameId, state: null });
         }

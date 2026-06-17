@@ -13,7 +13,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import './App.css';
 import './styles/LoveTheme.css';
 import VideoCall from './pages/VideoCall';
-import { GamesLobby, Connect4Page, TicTacToePage, DotsBoxesPage, MemoryCardsPage, NumberDuelPage, QuoridorPage } from './features/games';
+import { GamesLobby, Connect4Page, TicTacToePage, DotsBoxesPage, MemoryCardsPage, NumberDuelPage, QuoridorPage, SeaBattlePage } from './features/games';
 
 function App() {
   // Function to check if user is authenticated
@@ -145,6 +145,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <QuoridorPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/seabattle"
+                element={
+                  <ProtectedRoute>
+                    <SeaBattlePage />
                   </ProtectedRoute>
                 }
               />

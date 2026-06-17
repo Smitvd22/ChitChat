@@ -28,18 +28,19 @@ const GAMES = [
   },
   {
     id: 'tictactoe',
-    name: 'Tic Tac Toe',
+    name: 'Tic-Tac-Toe',
     emoji: '❌',
-    description: 'Classic X and O battle.',
+    description: 'The classic game of X\'s and O\'s. Simple, fast, and competitive.',
     available: true,
   },
   {
-    id: 'reaction-tap',
-    name: 'Reaction Tap',
-    emoji: '⚡',
-    description: 'Test your reflexes against a friend.',
-    available: false,
+    id: 'seabattle',
+    name: 'Sea Battle',
+    emoji: '🚢',
+    description: 'Deploy your fleet and sink the enemy before they sink you!',
+    available: true,
   },
+
   {
     id: 'dots-boxes',
     name: 'Dots & Boxes',
@@ -53,21 +54,7 @@ const GAMES = [
     emoji: '🃏',
     description: 'Find the matching pairs.',
     available: true,
-  },
-  {
-    id: 'ping-pong',
-    name: 'Ping Pong',
-    emoji: '🏓',
-    description: 'Fast-paced table tennis action.',
-    available: false,
-  },
-  {
-    id: 'snake-battle',
-    name: 'Snake Battle',
-    emoji: '🐍',
-    description: 'Grow your snake, outlast your rival.',
-    available: false,
-  },
+  }
 ];
 
 const GamesLobby = () => {

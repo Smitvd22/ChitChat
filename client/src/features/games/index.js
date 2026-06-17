@@ -6,6 +6,7 @@ export { default as DotsBoxesPage } from './games/dotsboxes/DotsBoxesPage';
 export { default as MemoryCardsPage } from './games/memorycards/MemoryCardsPage';
 export { default as NumberDuelPage } from './games/numberduel/NumberDuelPage';
 export { default as QuoridorPage } from './games/quoridor/QuoridorPage';
+export { default as SeaBattlePage } from './games/seabattle/SeaBattlePage';
 export { useGameSocket } from './hooks/useGameSocket';
 export { default as GameLayout } from './components/GameLayout';
 export { default as GameCard } from './components/GameCard';
