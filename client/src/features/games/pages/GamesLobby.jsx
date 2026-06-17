@@ -6,10 +6,24 @@ import '../styles/Games.css';
 
 const GAMES = [
   {
+    id: 'number-duel',
+    name: 'Number Duel',
+    emoji: '🔢',
+    description: 'Crack your opponent\'s code before they crack yours!',
+    available: true,
+  },
+  {
     id: 'connect4',
     name: 'Connect 4',
     emoji: '🔴',
     description: 'Drop discs to connect four in a row!',
+    available: true,
+  },
+  {
+    id: 'quoridor',
+    name: 'Quoridor',
+    emoji: '🧱',
+    description: 'Race to the other side while building walls to block your opponent.',
     available: true,
   },
   {

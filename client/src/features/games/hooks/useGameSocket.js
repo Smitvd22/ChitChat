@@ -110,7 +110,7 @@ export function useGameSocket({ roomId, gameId, player }) {
           saveGameState(roomId, gameId, data.state);
 
           // Reset rematch state on new game
-          if (data.state.status === 'playing' && data.state.moveHistory?.length === 0) {
+          if (data.state.status !== 'finished') {
             setRematchPending(false);
             setRematchRequested(false);
           }

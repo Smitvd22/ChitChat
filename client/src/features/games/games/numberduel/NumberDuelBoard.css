@@ -1,0 +1,461 @@
+.number-duel-board {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  gap: 1.5rem;
+}
+
+.setup-container, .playing-container {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.setup-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #ff7eb3, #ff758c, #ff7eb3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.mode-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mode-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.mode-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 30px;
+  padding: 4px;
+}
+
+.mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  padding: 0.6rem 1.5rem;
+  border-radius: 26px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mode-btn.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 117, 140, 0.4);
+}
+
+.mode-desc {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  text-align: center;
+}
+
+.secret-input-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.secret-form, .guess-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.secret-form input, .guess-form input {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 1.5rem;
+  text-align: center;
+  letter-spacing: 0.5rem;
+  font-weight: 700;
+  transition: border-color 0.3s ease;
+}
+
+.secret-form input:focus, .guess-form input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Hide number input spinners */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+/* input[type=number] {
+  -moz-appearance: textfield;
+} */
+
+.submit-btn, .guess-form button {
+  width: 100%;
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--primary-color);
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:disabled, .guess-form button:disabled {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.submit-btn:not(:disabled):hover, .guess-form button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 117, 140, 0.4);
+}
+
+.error-msg {
+  color: #ff4d4d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.waiting-status, .opponent-status {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mode-badge {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
+
+.my-secret-display span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.2rem;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+}
+
+.turn-indicator {
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 1.2rem;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.turn-indicator.my-turn {
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid #2ed573;
+  color: #2ed573;
+}
+
+.turn-indicator.opponent-turn {
+  background: rgba(255, 165, 2, 0.2);
+  border: 1px solid #ffa502;
+  color: #ffa502;
+}
+
+.last-chance-msg {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #ff4757;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.duel-arena {
+  display: flex;
+  width: 100%;
+  gap: 2rem;
+}
+
+.player-panel, .opponent-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.player-panel h3, .opponent-panel h3 {
+  margin: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.guess-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.guess-list::-webkit-scrollbar {
+  width: 6px;
+}
+.guess-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.guess-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.8rem;
+  border-radius: 8px;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.guess-number {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.2rem;
+}
+
+.feedback-easy {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.feedback-digit {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.status-correct { background: #2ed573; color: #1f2a24; }
+.status-position { background: #ffa502; color: #3a2703; }
+.status-none { background: #576574; color: #c8d6e5; }
+
+.feedback-hard {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.feedback-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+}
+
+.no-guesses {
+  text-align: center;
+  opacity: 0.5;
+  font-style: italic;
+  padding: 2rem 0;
+}
+
+.game-over-banner {
+  width: 100%;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.game-over-banner h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: var(--primary-color);
+}
+
+.win-text { color: #2ed573; font-weight: bold; font-size: 1.2rem; }
+.lose-text { color: #ff4757; font-weight: bold; font-size: 1.2rem; }
+
+.revealed-secrets {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 768px) {
+  .duel-arena {
+    flex-direction: column;
+  }
+}
+
+/* --- Light Mode Enhancements --- */
+[data-theme='light'] .setup-container, 
+[data-theme='light'] .playing-container {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme='light'] .mode-selector {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .mode-toggle {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .mode-btn {
+  color: var(--text-color);
+}
+
+[data-theme='light'] .mode-btn.active {
+  color: white;
+}
+
+[data-theme='light'] .secret-form input, 
+[data-theme='light'] .guess-form input {
+  background: rgba(0, 0, 0, 0.03);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  color: var(--text-color);
+}
+
+[data-theme='light'] .secret-form input:focus, 
+[data-theme='light'] .guess-form input:focus {
+  border-color: var(--primary-color);
+  background: white;
+}
+
+[data-theme='light'] .submit-btn:disabled, 
+[data-theme='light'] .guess-form button:disabled {
+  background: rgba(0, 0, 0, 0.1);
+  color: rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='light'] .waiting-status, 
+[data-theme='light'] .opponent-status {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .game-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .mode-badge {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .my-secret-display span {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .player-panel, 
+[data-theme='light'] .opponent-panel {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='light'] .player-panel h3, 
+[data-theme='light'] .opponent-panel h3 {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .guess-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .guess-item {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+[data-theme='light'] .game-over-banner {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme='light'] .revealed-secrets {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}

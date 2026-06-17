@@ -1,0 +1,335 @@
+.quoridor-board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.q-setup-panel {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.q-mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.q-mode-toggle button {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.q-mode-toggle button.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 15px rgba(255, 117, 140, 0.4);
+}
+
+.q-mode-toggle button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.q-start-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.q-start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 117, 140, 0.5);
+}
+
+.q-game-area {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+}
+
+.q-player-info {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+  border-radius: 12px;
+  min-width: 200px;
+  text-align: center;
+}
+
+.q-player-info.p1 h3 { color: #ff7eb3; }
+.q-player-info.p2 h3 { color: #4facfe; }
+
+.q-target {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+.q-center-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.q-turn-indicator {
+  padding: 0.8rem 2rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  font-weight: bold;
+  font-size: 1.1rem;
+  transition: all 0.3s ease;
+}
+
+.q-turn-indicator.my-turn {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 0 15px rgba(255, 117, 140, 0.5);
+}
+
+.q-wall-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.q-wall-controls button {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.q-wall-controls button.active {
+  background: white;
+  color: black;
+}
+
+.q-board {
+  position: relative;
+  width: 440px;
+  height: 440px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.q-cell {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-cell.valid-move {
+  background: rgba(46, 213, 115, 0.3);
+  cursor: pointer;
+  box-shadow: inset 0 0 10px rgba(46, 213, 115, 0.5);
+}
+
+.q-cell.valid-move:hover {
+  background: rgba(46, 213, 115, 0.6);
+}
+
+.q-pawn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  position: absolute;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.q-pawn.p1 {
+  background: linear-gradient(135deg, #ff7eb3, #ff758c);
+  z-index: 10;
+}
+
+.q-pawn.p2 {
+  background: linear-gradient(135deg, #4facfe, #00f2fe);
+  z-index: 11;
+}
+
+/* Fix overlapping pawns visually slightly off-center if they share a cell */
+.q-cell .q-pawn.p1:nth-child(1) { transform: translate(-2px, -2px); }
+.q-cell .q-pawn.p2:nth-child(2) { transform: translate(2px, 2px); }
+
+.q-wall-slot {
+  position: absolute;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.q-wall-slot.occupied {
+  cursor: not-allowed;
+}
+
+.q-wall {
+  position: absolute;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.q-wall.placed {
+  background: white;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+  z-index: 6;
+}
+
+.q-wall.placed.p1 { background: #ff7eb3; box-shadow: 0 0 8px #ff7eb3; }
+.q-wall.placed.p2 { background: #4facfe; box-shadow: 0 0 8px #4facfe; }
+
+.q-wall.preview {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  z-index: 4;
+}
+
+.q-wall-slot:not(.occupied):hover .q-wall.preview {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.q-winner-banner {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 1.5rem 3rem;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid var(--primary-color);
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .q-game-area {
+    flex-direction: column;
+    align-items: center;
+  }
+  .q-player-info {
+    width: 100%;
+    max-width: 440px;
+  }
+}
+
+/* --- Light Mode Enhancements --- */
+[data-theme='light'] .q-player-info {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .q-turn-indicator {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-color);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .q-turn-indicator.my-turn {
+  background: var(--primary-color);
+  color: white;
+}
+
+[data-theme='light'] .q-wall-controls {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .q-wall-controls button {
+  color: var(--text-color);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='light'] .q-wall-controls button.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+[data-theme='light'] .q-board {
+  background: rgba(0, 0, 0, 0.02);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='light'] .q-cell {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme='light'] .q-cell.valid-move {
+  background: rgba(46, 213, 115, 0.2);
+}
+
+[data-theme='light'] .q-wall.placed {
+  background: #333;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme='light'] .q-wall.placed.p1 {
+  background: #ff7eb3;
+  box-shadow: 0 0 6px rgba(255, 126, 179, 0.6);
+}
+
+[data-theme='light'] .q-wall.placed.p2 {
+  background: #4facfe;
+  box-shadow: 0 0 6px rgba(79, 172, 254, 0.6);
+}
+
+[data-theme='light'] .q-wall.preview {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme='light'] .q-wall-slot:not(.occupied):hover .q-wall.preview {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='light'] .q-winner-banner {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}

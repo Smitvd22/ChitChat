@@ -13,7 +13,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import './App.css';
 import './styles/LoveTheme.css';
 import VideoCall from './pages/VideoCall';
-import { GamesLobby, Connect4Page, TicTacToePage, DotsBoxesPage, MemoryCardsPage } from './features/games';
+import { GamesLobby, Connect4Page, TicTacToePage, DotsBoxesPage, MemoryCardsPage, NumberDuelPage, QuoridorPage } from './features/games';
 
 function App() {
   // Function to check if user is authenticated
@@ -129,6 +129,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <MemoryCardsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/number-duel"
+                element={
+                  <ProtectedRoute>
+                    <NumberDuelPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/games/:friendId/quoridor"
+                element={
+                  <ProtectedRoute>
+                    <QuoridorPage />
                   </ProtectedRoute>
                 }
               />

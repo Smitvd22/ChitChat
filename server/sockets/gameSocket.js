@@ -10,6 +10,8 @@ import { createGame, makeMove, resetForRematch } from '../games/connect4.js';
 import * as tictactoe from '../games/tictactoe.js';
 import * as dotsboxes from '../games/dotsboxes.js';
 import * as memorycards from '../games/memorycards.js';
+import * as numberduel from '../games/numberduel.js';
+import * as quoridor from '../games/quoridor.js';
 
 // In-memory store of active game sessions
 // Key: `${roomId}:${gameId}`, Value: game state
@@ -21,6 +23,8 @@ const gameRegistry = {
   tictactoe: tictactoe,
   'dots-boxes': dotsboxes,
   'memory-cards': memorycards,
+  'number-duel': numberduel,
+  'quoridor': quoridor,
 };
 
 /**
@@ -85,7 +89,11 @@ export function setupGameSocket(io) {
             // Add second player
             session.players.push(player);
             if (session.players.length === 2) {
-              session.status = 'playing';
+              if (gameId === 'number-duel') {
+                session.status = 'setup';
+              } else {
+                session.status = 'playing';
+              }
             }
             console.log(`[Game] ${player.username} joined ${gameId} in room ${roomId}. Players: ${session.players.length}`);
           } else {
